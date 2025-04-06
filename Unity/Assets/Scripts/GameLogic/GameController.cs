@@ -7,8 +7,9 @@ using UnityEngine;
 public class GameController : MonoBehaviour
 {
     [SerializeField] private WebSocketManager wsManager;
-    [SerializeField] private ARSetup arSetup;
     [SerializeField] private NetworkManager networkManager;
+    [SerializeField] private ARSetup arSetup;
+    [SerializeField] private PlayerSpawner playerSpawner;
     [SerializeField] private GameObject playerPrefab;
     [SerializeField] private TMP_InputField roomCodeInp;
     [SerializeField] private GameObject roomCodePanel;
@@ -57,6 +58,14 @@ public class GameController : MonoBehaviour
             if (arena != null) 
                 arenaTransform = arena.transform;
         }
+
+        if (playerSpawner == null)
+            playerSpawner = FindObjectOfType<PlayerSpawner>();
+
+        if (playerSpawner != null)
+            playerSpawner.SpawnPlayers();
+        else
+            Debug.LogError("PlayerSpawner not found!");
     }
 
     public void JoinRoom()

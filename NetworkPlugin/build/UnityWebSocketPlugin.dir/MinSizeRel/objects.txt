@@ -1,0 +1,1 @@
+C:/Workspace/group-project/NetworkPlugin/build/UnityWebSocketPlugin.dir/MinSizeRel/WebSocketPlugin.obj

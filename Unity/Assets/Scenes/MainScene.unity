@@ -619,6 +619,7 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 2103721692}
+  - {fileID: 634120896}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -626,6 +627,41 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!1 &634120895
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 634120896}
+  m_Layer: 5
+  m_Name: Game Interface
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &634120896
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 634120895}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 619326957}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &705507993
 GameObject:
   m_ObjectHideFlags: 0
@@ -767,7 +803,7 @@ MonoBehaviour:
   raycastManager: {fileID: 1775594513}
   planeManager: {fileID: 1775594512}
   session: {fileID: 989775841}
-  gameArena: {fileID: 0}
+  gameArena: {fileID: 5522576289842606490, guid: 6dca2ac205d338d40b4c317990be84f7, type: 3}
 --- !u!1 &989775840
 GameObject:
   m_ObjectHideFlags: 0
@@ -1423,6 +1459,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1753264772}
+  - component: {fileID: 1753264773}
   - component: {fileID: 1753264771}
   m_Layer: 0
   m_Name: Game Controller
@@ -1444,12 +1481,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   wsManager: {fileID: 304651682}
-  arSetup: {fileID: 744486137}
   networkManager: {fileID: 1099687489}
+  arSetup: {fileID: 744486137}
+  playerSpawner: {fileID: 0}
   playerPrefab: {fileID: 0}
   roomCodeInp: {fileID: 1350941926}
   roomCodePanel: {fileID: 2103721691}
-  gameInterface: {fileID: 0}
+  gameInterface: {fileID: 634120895}
   attackEffectPrefab: {fileID: 0}
   arenaTransform: {fileID: 0}
 --- !u!4 &1753264772
@@ -1467,6 +1505,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1753264773
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1753264770}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 62817d35fa6890b43ab4ff1021037729, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  player1Prefab: {fileID: 919132149155446097, guid: 9fcc294516175ec4c8f48fd04e8086f8, type: 3}
+  player2Prefab: {fileID: 919132149155446097, guid: 47fdadcb184b0654b89159926c545cbd, type: 3}
+  gameArena: {fileID: 0}
 --- !u!1 &1775594509
 GameObject:
   m_ObjectHideFlags: 0
@@ -1511,14 +1564,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1775594509}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: 0.3420201, y: 0, z: 0, w: 0.9396927}
+  m_LocalPosition: {x: 0, y: 3, z: -6}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 464482865}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 40, y: 0, z: 0}
 --- !u!114 &1775594512
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -39,7 +39,7 @@ public class ARSetup : MonoBehaviour
 
         isPlacementValid = raycastManager.Raycast(screenCenter, hits, UnityEngine.XR.ARSubsystems.TrackableType.PlaneWithinPolygon);
 
-        UpdatePlacementIndicator();
+        //UpdatePlacementIndicator();
     }
 
     public void PlaceArena()

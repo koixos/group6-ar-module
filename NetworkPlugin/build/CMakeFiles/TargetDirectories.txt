@@ -1,0 +1,4 @@
+C:/Workspace/group-project/NetworkPlugin/build/CMakeFiles/UnityWebSocketPlugin.dir
+C:/Workspace/group-project/NetworkPlugin/build/CMakeFiles/INSTALL.dir
+C:/Workspace/group-project/NetworkPlugin/build/CMakeFiles/ALL_BUILD.dir
+C:/Workspace/group-project/NetworkPlugin/build/CMakeFiles/ZERO_CHECK.dir
