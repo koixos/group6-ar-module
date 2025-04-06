@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
@@ -59,14 +58,6 @@ public class ARSetup : MonoBehaviour
             session.enabled = false;
             OnArenaPlaced();
         }
-    }
-
-    private void UpdatePlacementIndicator()
-    {
-        /*
-         * update placement indic visual -
-         * implement would show/hide & pos an indic obj 
-        */
     }
 
     private void OnArenaPlaced()

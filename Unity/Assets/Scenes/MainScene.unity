@@ -429,6 +429,51 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Padding: {x: -8, y: -5, z: -8, w: -5}
   m_Softness: {x: 0, y: 0}
+--- !u!1 &304651680
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 304651681}
+  - component: {fileID: 304651682}
+  m_Layer: 0
+  m_Name: WebSocket Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &304651681
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 304651680}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &304651682
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 304651680}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19e90641f09d1084c89a4b753016dd27, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  gameController: {fileID: 1753264771}
 --- !u!1 &464482864
 GameObject:
   m_ObjectHideFlags: 0
@@ -493,10 +538,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 840ca32964b25fd46a8f4f6143404922, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  roomCodeInp: {fileID: 1350941926}
-  connectBtn: {fileID: 98260183}
-  connectionPanel: {fileID: 2103721691}
-  statusText: {fileID: 131276297}
+  wsManager: {fileID: 0}
+  pingInterval: 5
+  reconnectDelay: 3
+  maxQeueuedMsgs: 60
+  processingDelay: 0.016
 --- !u!114 &619326954
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -683,28 +729,14 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 744486136}
-  - component: {fileID: 744486135}
+  - component: {fileID: 744486137}
   m_Layer: 0
-  m_Name: AR Scene Manager
+  m_Name: AR Setup
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &744486135
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 744486134}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4d514234e50d6f24a9a69938a324733c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  arSession: {fileID: 989775841}
-  xrOrigin: {fileID: 1775594510}
 --- !u!4 &744486136
 Transform:
   m_ObjectHideFlags: 0
@@ -720,6 +752,22 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &744486137
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 744486134}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a04628ce7babf6c438cc50bf5d4ab81a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  raycastManager: {fileID: 1775594513}
+  planeManager: {fileID: 1775594512}
+  session: {fileID: 989775841}
+  gameArena: {fileID: 0}
 --- !u!1 &989775840
 GameObject:
   m_ObjectHideFlags: 0
@@ -789,7 +837,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1099687488}
-  - component: {fileID: 1099687487}
+  - component: {fileID: 1099687489}
   m_Layer: 0
   m_Name: Network Manager
   m_TagString: Untagged
@@ -797,20 +845,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1099687487
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1099687486}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 19e90641f09d1084c89a4b753016dd27, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _url: ws://localhost:9001
-  reconnectAttempts: 3
 --- !u!4 &1099687488
 Transform:
   m_ObjectHideFlags: 0
@@ -826,6 +860,23 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1099687489
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1099687486}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 840ca32964b25fd46a8f4f6143404922, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  wsManager: {fileID: 304651682}
+  pingInterval: 5
+  reconnectDelay: 3
+  maxQeueuedMsgs: 60
+  processingDelay: 0.016
 --- !u!1 &1350941922
 GameObject:
   m_ObjectHideFlags: 0
@@ -1374,7 +1425,7 @@ GameObject:
   - component: {fileID: 1753264772}
   - component: {fileID: 1753264771}
   m_Layer: 0
-  m_Name: AR Game Manager
+  m_Name: Game Controller
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1392,15 +1443,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9af0cb8926daa9c44a252570174c5cbd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  wsManager: {fileID: 304651682}
+  arSetup: {fileID: 744486137}
+  networkManager: {fileID: 1099687489}
   playerPrefab: {fileID: 0}
-  healthBarPrefab: {fileID: 0}
-  fireballPrefab: {fileID: 0}
-  lightningPrefab: {fileID: 0}
-  damageTextPrefab: {fileID: 0}
-  playerModels:
-  - {fileID: 919132149155446097, guid: 9fcc294516175ec4c8f48fd04e8086f8, type: 3}
-  - {fileID: 919132149155446097, guid: 47fdadcb184b0654b89159926c545cbd, type: 3}
-  attackModels: []
+  roomCodeInp: {fileID: 1350941926}
+  roomCodePanel: {fileID: 2103721691}
+  gameInterface: {fileID: 0}
+  attackEffectPrefab: {fileID: 0}
+  arenaTransform: {fileID: 0}
 --- !u!4 &1753264772
 Transform:
   m_ObjectHideFlags: 0
@@ -1426,6 +1477,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1775594511}
   - component: {fileID: 1775594510}
+  - component: {fileID: 1775594512}
+  - component: {fileID: 1775594513}
   m_Layer: 0
   m_Name: XR Origin
   m_TagString: Untagged
@@ -1466,6 +1519,33 @@ Transform:
   - {fileID: 464482865}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1775594512
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1775594509}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1760703bbd54c04488a8d10600262ab, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_PlanePrefab: {fileID: 0}
+  m_DetectionMode: -1
+--- !u!114 &1775594513
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1775594509}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa17d122634046b4a8e23048891fafc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_RaycastPrefab: {fileID: 0}
 --- !u!1 &1872220094
 GameObject:
   m_ObjectHideFlags: 0
@@ -1908,8 +1988,9 @@ SceneRoots:
   - {fileID: 1775594511}
   - {fileID: 989775843}
   - {fileID: 705507995}
-  - {fileID: 744486136}
-  - {fileID: 1099687488}
-  - {fileID: 1753264772}
   - {fileID: 1877891088}
   - {fileID: 619326957}
+  - {fileID: 304651681}
+  - {fileID: 1099687488}
+  - {fileID: 1753264772}
+  - {fileID: 744486136}
