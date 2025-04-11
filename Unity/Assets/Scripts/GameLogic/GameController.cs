@@ -1,20 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 
 public class GameController : MonoBehaviour
 {
-    [SerializeField] private WebSocketManager wsManager;
-    [SerializeField] private NetworkManager networkManager;
-    [SerializeField] private ARSetup arSetup;
-    [SerializeField] private PlayerSpawner playerSpawner;
-    [SerializeField] private GameObject playerPrefab;
-    [SerializeField] private TMP_InputField roomCodeInp;
-    [SerializeField] private GameObject roomCodePanel;
-    [SerializeField] private GameObject gameInterface;
-    [SerializeField] private GameObject attackEffectPrefab;
+    [SerializeField] private GameObject playerPrefab;   /* */
+    [SerializeField] private GameObject attackEffectPrefab; /* */
     [SerializeField] private Transform arenaTransform;
 
     private string currTurn = "";
@@ -27,64 +19,6 @@ public class GameController : MonoBehaviour
         new(-0.5f, 0, 0),
         new(0.5f, 0, 0)
     };
-
-    void Start()
-    {
-        if (wsManager == null)
-            wsManager = FindObjectOfType<WebSocketManager>();
-
-        if (arSetup == null)
-            arSetup = FindObjectOfType<ARSetup>();
-
-        ShowRoomCodePanel(true);
-        ShowGameInterface(false);
-
-        if (networkManager != null)
-            networkManager.OnConnectionStatusChanged += OnConnectionStatusChanged;
-    }
-
-    void OnDestroy()
-    {
-        if (networkManager != null)
-            networkManager.OnConnectionStatusChanged -= OnConnectionStatusChanged;
-    }
-
-    public void OnARSetupComplete()
-    {
-        Debug.Log("AR Setup complete, arena placed");
-        if (arenaTransform == null)
-        {
-            GameObject arena = GameObject.FindGameObjectWithTag("GameArena");
-            if (arena != null) 
-                arenaTransform = arena.transform;
-        }
-
-        if (playerSpawner == null)
-            playerSpawner = FindObjectOfType<PlayerSpawner>();
-
-        if (playerSpawner != null)
-            playerSpawner.SpawnPlayers();
-        else
-            Debug.LogError("PlayerSpawner not found!");
-    }
-
-    public void JoinRoom()
-    {
-        if (roomCodeInp == null || string.IsNullOrEmpty(roomCodeInp.text))
-        {
-            Debug.LogError("Room code is empty");
-            return;
-        }
-
-        string roomCode = roomCodeInp.text.Trim();
-        wsManager.JoinRoom(roomCode);
-
-        if (networkManager != null)
-            networkManager.SetRoomCode(roomCode);
-
-        ShowRoomCodePanel(false);
-        ShowGameInterface(true);
-    }
 
     public void UpdateGameState(WebSocketManager.GameStateMessage gameState)
     {
@@ -184,16 +118,6 @@ public class GameController : MonoBehaviour
         Debug.Log($"Current turn: {currTurn}, Turn count: {turnCount}");
     }
 
-    private void OnConnectionStatusChanged(bool isConnected)
-    {
-        if (!isConnected && gameActive)
-        {
-            Debug.Log("Disconnected from server");
-            ShowRoomCodePanel(true);
-            ShowGameInterface(false);
-        }
-    }
-
     private void HandleAttack(PlayerController attacker, WebSocketManager.PlayerActionMessage action)
     {
         attacker.PlayAttackAnimation(action.attackName);
@@ -216,18 +140,6 @@ public class GameController : MonoBehaviour
         {
             target.TakeDamage(action.damage);
         }));
-    }
-
-    private void ShowRoomCodePanel(bool show)
-    {
-        if (roomCodePanel != null)
-            roomCodePanel.SetActive(show);
-    }
-
-    private void ShowGameInterface(bool show)
-    {
-        if (gameInterface != null)
-            gameInterface.SetActive(show);
     }
 
     private IEnumerator AnimateEffect(GameObject effect, Vector3 start, Vector3 end)

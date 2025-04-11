@@ -1,56 +1,38 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerSpawner : MonoBehaviour
 {
     [SerializeField] private GameObject player1Prefab;
     [SerializeField] private GameObject player2Prefab;
-    [SerializeField] private GameArena gameArena;
-
-    private GameObject player1;
-    private GameObject player2;
+    [SerializeField] private GameObject arena;
 
     public void SpawnPlayers()
     {
-        if (gameArena == null)
-        {
-            gameArena = FindObjectOfType<GameArena>();
-            if (gameArena == null)
-            {
-                Debug.LogError("GameArena not found in the scene.");
-                return;
-            }
-        }
+        if (arena == null)
+            arena = GameObject.FindGameObjectWithTag("GameArena");
 
-        SpawnPlayer1();
-        SpawnPlayer2();
+        GameObject arenaFloor = arena.transform.Find("ArenaFloor").gameObject;
+        if (arenaFloor != null)
+        {
+            Bounds arenaBounds = arenaFloor.GetComponent<Renderer>().bounds;
+            Debug.Log($"Arena Bounds - Min: {arenaBounds.min}, Max: {arenaBounds.max}, Center: {arenaBounds.center}");
+
+            /*Vector3 leftCenter = new(arenaBounds.min.x, arenaBounds.center.y, arenaBounds.center.z);
+            Vector3 rightCenter = new(arenaBounds.max.x, arenaBounds.center.y, arenaBounds.center.z);
+            Debug.Log($"Left Center: {leftCenter}, Right Center: {rightCenter}");*/
+            Vector3 leftCenter = new Vector3(-1f, 0.5f, 0f);
+            Vector3 rightCenter = new Vector3(1f, 0.5f, 0f);
+
+            SpawnPlayer(player1Prefab, leftCenter, Quaternion.Euler(0, 90, 0));
+            SpawnPlayer(player2Prefab, rightCenter, Quaternion.Euler(0, -90, 0));
+        }
     }
 
-    private void SpawnPlayer1()
+    private void SpawnPlayer(GameObject playerPrefab, Vector3 position, Quaternion rotation)
     {
-        if (player1Prefab == null)
-        {
-            Debug.LogError("Player 1 prefab is not assigned!");
-            return;
-        }
-        
-        Transform spawnPos = gameArena.GetPlayerPosition(0);
-        player1 = Instantiate(player1Prefab, spawnPos.position, spawnPos.rotation);
-        player1.transform.SetParent(spawnPos);
+        if (playerPrefab == null) return;
+        GameObject player = Instantiate(playerPrefab, position, rotation);
+        player.transform.localScale = new Vector3(1f, 1f, 1f);
+        Debug.Log($"Player spawned at position: {position}");
     }
-
-    private void SpawnPlayer2()
-    {
-        if (player2Prefab == null)
-        {
-            Debug.LogError("Player 2 prefab is not assigned!");
-            return;
-        }
-
-        Transform spawnPos = gameArena.GetPlayerPosition(1);
-        player2 = Instantiate(player2Prefab, spawnPos.position, spawnPos.rotation);
-        player2.transform.SetParent(spawnPos);
-    }
-
 }
