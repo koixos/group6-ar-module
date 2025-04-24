@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -10,7 +9,6 @@ public class MainSceneManager : MonoBehaviour
     [SerializeField] private NetworkManager networkManager;
     [SerializeField] private PlayerSpawner playerSpawner;
     [SerializeField] private ARRaycastManager raycastManager;
-    [SerializeField] private ARPlaneManager planeManager;
     [SerializeField] private ARSession session;
     [SerializeField] private Camera Camera;
     [SerializeField] private GameObject gameArenaPrefab;
@@ -25,8 +23,7 @@ public class MainSceneManager : MonoBehaviour
 
     private readonly List<ARRaycastHit> hits = new();
     private GameObject gameArena = null;
-    private bool isPlacementValid = false;
-    private bool isSetupComplete = false;
+    private bool arenaPlaced = false;
     private bool isGameActive = true; // CHANGE THIS TO FALSE 
 
     //private bool hasConnectedToServer = false;
@@ -35,9 +32,6 @@ public class MainSceneManager : MonoBehaviour
     {
         if (raycastManager == null)
             raycastManager = FindObjectOfType<ARRaycastManager>();
-
-        if (planeManager == null)
-            planeManager = FindObjectOfType<ARPlaneManager>();
 
         if (session == null)
             session = FindObjectOfType<ARSession>();
@@ -68,26 +62,12 @@ public class MainSceneManager : MonoBehaviour
     // here we might not need to update raycasts after finding a plane for the arena
     void Update()
     {
-        if (isSetupComplete) return;
-
-        isPlacementValid = false;
-
-        Vector2[] screenPoints =
+        if (!arenaPlaced && Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
         {
-            new(Screen.width / 2, Screen.height / 2),           // Center of the screen
-            new(Screen.width / 4, Screen.height / 4),           // Top-left corner
-            new(Screen.width * 3 / 4, Screen.height / 4),       // Top-right corner
-            new(Screen.width * 3 / 4, Screen.height * 3 / 4),   // Bottom-right corner
-            new(Screen.width / 4, Screen.height * 3 / 4),       // Bottom-left corner
-        };
-
-        foreach (var point in screenPoints)
-        {
-            if (raycastManager.Raycast(point, hits, UnityEngine.XR.ARSubsystems.TrackableType.PlaneWithinPolygon))
-            {
-                isPlacementValid = true;
-                break;
-            }
+            PlaceArena(Input.GetTouch(0).position);
+            arenaPlaced = true;
+            playerSpawner.SpawnPlayers(gameArena);
+            return;
         }
     }
 
@@ -97,7 +77,7 @@ public class MainSceneManager : MonoBehaviour
             networkManager.OnConnectionStatusChanged -= OnConnectionStatusChanged;
     }
 
-    public void OnPlaceArenaButtonClicked()
+    /*public void OnPlaceArenaButtonClicked()
     {
         if (isPlacementValid)
         {
@@ -109,7 +89,7 @@ public class MainSceneManager : MonoBehaviour
             // SET STATUS MSG
         }
 
-    }
+    }*/
 
     public void OnJoinRoomButtonClicked()
     {
@@ -144,48 +124,38 @@ public class MainSceneManager : MonoBehaviour
         return true;
     }
 
-    private void PlaceArena()
+    private void PlaceArena(Vector2 screenPos)
     {
-        if (!isPlacementValid || isSetupComplete) return;
+        if (raycastManager.Raycast(screenPos, hits, UnityEngine.XR.ARSubsystems.TrackableType.Planes))
+        {
+            if (gameArena == null)
+                gameArena = Instantiate(gameArenaPrefab, hits[0].pose.position, hits[0].pose.rotation);
+            else
+                gameArena.transform.SetPositionAndRotation(hits[0].pose.position, hits[0].pose.rotation);
+        }
+        else
+        {
+            Vector3 pos = Camera.transform.position + Camera.transform.forward * 2.0f;
+            pos.y = Camera.transform.position.y - 3.0f;
+            pos.z = Camera.transform.position.z + 1.5f;
 
+            Quaternion rot = Quaternion.Euler(45f, Camera.main.transform.eulerAngles.y, 0);
+
+            if (gameArena == null)
+                gameArena = Instantiate(gameArenaPrefab, pos, rot);
+            else
+                gameArena.transform.SetPositionAndRotation(pos, rot);
+        }
+    }
+
+    private void ResetArena()
+    {
+        arenaPlaced = false;
         if (gameArena != null)
         {
             Destroy(gameArena);
             gameArena = null;
         }
-
-        if (hits.Count > 0 && gameArenaPrefab != null)
-        {
-            Pose hitPose = hits[0].pose;
-            Quaternion rotation = Quaternion.LookRotation(Camera.transform.forward, Vector3.up);
-            gameArena = Instantiate(gameArenaPrefab, hitPose.position, rotation);
-            gameArena.transform.localScale = new Vector3(0.1f, 0.1f, 0.1f);
-            gameArena.tag = "GameArena";
-            isSetupComplete = true;
-
-            planeManager.enabled = false;
-            //session.enabled = false;
-
-            FocusCamOnArena(gameArena.transform);
-            OnArenaPlaced();
-        }
-    }
-
-    private void FocusCamOnArena(Transform transform)
-    {
-        Vector3 arenaCenter = transform.position;
-        Vector3 cameraPos = arenaCenter;
-        Camera.transform.position = cameraPos;
-        Camera.transform.LookAt(arenaCenter);
-    }
-
-    private void OnArenaPlaced()
-    {
-        if (gameArena == null)
-            gameArena = GameObject.FindGameObjectWithTag("GameArena");
-
-        if (playerSpawner != null)
-            playerSpawner.SpawnPlayers();
     }
 
     private void OnConnectionStatusChanged(bool isConnected)

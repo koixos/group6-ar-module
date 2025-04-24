@@ -1116,7 +1116,7 @@ MonoBehaviour:
   networkManager: {fileID: 1099687489}
   playerSpawner: {fileID: 932770612}
   raycastManager: {fileID: 1775594513}
-  planeManager: {fileID: 1775594512}
+  planeManager: {fileID: 0}
   session: {fileID: 989775841}
   Camera: {fileID: 1722859281}
   gameArenaPrefab: {fileID: 5522576289842606490, guid: 6dca2ac205d338d40b4c317990be84f7, type: 3}
@@ -1556,6 +1556,64 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1382434523}
   m_CullTransparentMesh: 1
+--- !u!1 &1575595197
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1575595199}
+  - component: {fileID: 1575595198}
+  m_Layer: 0
+  m_Name: LeanTouch
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1575595198
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1575595197}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1fc98219a83dff145947365dc914d06e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tapThreshold: 0.5
+  swipeThreshold: 200
+  referenceDpi: 200
+  guiLayers:
+    serializedVersion: 2
+    m_Bits: 32
+  useTouch: 1
+  useHover: 1
+  useMouse: 1
+  useSimulator: 1
+  disableMouseEmulation: 1
+  recordFingers: 1
+  recordThreshold: 5
+  recordLimit: 0
+--- !u!4 &1575595199
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1575595197}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1722859275
 GameObject:
   m_ObjectHideFlags: 0
@@ -1857,7 +1915,6 @@ GameObject:
   m_Component:
   - component: {fileID: 1775594511}
   - component: {fileID: 1775594510}
-  - component: {fileID: 1775594512}
   - component: {fileID: 1775594513}
   m_Layer: 0
   m_Name: XR Origin
@@ -1899,20 +1956,6 @@ Transform:
   - {fileID: 464482865}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 40, y: 0, z: 0}
---- !u!114 &1775594512
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1775594509}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e1760703bbd54c04488a8d10600262ab, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_PlanePrefab: {fileID: 5050671963531485684, guid: 4b9bb7ac242736f4692781f2fd147f58, type: 3}
-  m_DetectionMode: 1
 --- !u!114 &1775594513
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2375,3 +2418,4 @@ SceneRoots:
   - {fileID: 619326957}
   - {fileID: 1753264772}
   - {fileID: 1877891088}
+  - {fileID: 1575595199}
