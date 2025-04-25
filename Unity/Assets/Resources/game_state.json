@@ -6,7 +6,7 @@
             "id": "p1",
             "username": "WarriorQueen",
             "health": 85,
-            "modelName": "GreatSword",
+            "modelName": "maria",
             "state": "attacking",
             "attackType": "fireball",
             "attackDamage": 15
@@ -15,7 +15,7 @@
             "id": "p2",
             "username": "Voldemort",
             "health": 102,
-            "modelName": "Pumpkinhulk",
+            "modelName": "pumpkinhulk",
             "state": "idle",
             "attackType": "",
             "attackDamage": 0

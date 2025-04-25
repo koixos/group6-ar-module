@@ -131,7 +131,7 @@ public class WebSocketManager : MonoBehaviour
     
     private void ProcessMessage(string json)
     {
-        try
+        /*try
         {
             BaseMessage baseMsg = JsonConvert.DeserializeObject<BaseMessage>(json);
             if (baseMsg == null || string.IsNullOrEmpty(baseMsg.type))
@@ -178,7 +178,7 @@ public class WebSocketManager : MonoBehaviour
         catch (Exception ex)
         {
             Debug.LogError($"Unexpected error: {ex.Message}");
-        }
+        }*/
     }
 
     [Serializable]

@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -11,44 +10,91 @@ public class PlayerState
     public string username;
     public string avatar;
     public int health;
-    public string attackName;
     public string state;
-    public int attackDamage;
+    public string attackName = "";
+    public int attackDamage = 0;
 }
 
 [Serializable]
 public class GameStateMessage
 {
-    public string type = "game_state";
     public PlayerState[] players;
     public string gameStatus;
+    public string turnPlayerId;
 }
 
 public class GameController : MonoBehaviour
 {
     private readonly string fileName = "game_state";
+    private readonly float updateInterval = 1.0f;
     private GameStateMessage currentState;
+    private float lastUpdateTime = 0f;
 
     [SerializeField] private GameObject arena;
     [SerializeField] private GameObject[] attackPrefabs;
     [SerializeField] private GameObject[] playerPrefabs;
     private readonly Dictionary<string, PlayerController> players = new();
-    
-    //private bool gameActive = false;
-    //public string gameStatus;   // "idle", "ongoing", "finished"
 
     void Start()
+    {
+        LoadInitialGameState();
+    }
+
+    void Update()
+    {
+        lastUpdateTime += Time.deltaTime;
+        if (lastUpdateTime >= updateInterval)
+        {
+            lastUpdateTime = 0f;
+            UpdateGameState();
+        }
+    }
+
+    public void SetArena(GameObject arena)
+    {
+        if (arena != null)
+            this.arena = arena;
+    }
+
+    private void LoadInitialGameState()
     {
         TextAsset jsonFile = Resources.Load<TextAsset>(fileName);
         if (jsonFile == null) return;
         currentState = JsonUtility.FromJson<GameStateMessage>(jsonFile.text);
-        SpawnPlayers(currentState);
+        if (currentState == null || currentState.players == null) return;
+        SpawnPlayers();
     }
 
-    public void SpawnPlayers(GameStateMessage gameState)
+    private void UpdateGameState()
+    {
+        TextAsset jsonFile = Resources.Load<TextAsset>(fileName);
+        if (jsonFile == null) return;
+        GameStateMessage newState = JsonUtility.FromJson<GameStateMessage>(jsonFile.text);
+        ProcessGameStateUpdate(newState);
+    }
+
+    private void ProcessGameStateUpdate(GameStateMessage newState)
+    {
+        if (newState == null || newState.players == null) return;
+
+        if (newState.gameStatus != currentState.gameStatus)
+            HandleGameStatusChange(newState.gameStatus);
+
+        currentState = newState;
+
+        foreach (var player in newState.players)
+            if (players.TryGetValue(player.id, out var playerController))
+                HandlePlayerStatusChanged(player, playerController);
+
+        CheckGameEnd(newState);
+    }
+
+    private void SpawnPlayers()
     {
         if (arena == null)
             arena = GameObject.FindGameObjectWithTag("GameArena");
+
+        if (arena == null) return;
 
         Transform arenaTransform = arena.transform;
         Vector3 arenaRight = arenaTransform.right;
@@ -67,38 +113,15 @@ public class GameController : MonoBehaviour
         Quaternion p1Rot = Quaternion.LookRotation(-arenaTransform.right, arenaTransform.up);
         Quaternion p2Rot = Quaternion.LookRotation(arenaTransform.right, arenaTransform.up);
 
-        var players = gameState.players;
-        SpawnPlayer(players[0], p1Pos, p1Rot, arena);
-        SpawnPlayer(players[1], p2Pos, p2Rot, arena);
+        SpawnPlayer(currentState.players[0], p1Pos, p1Rot);
+        SpawnPlayer(currentState.players[1], p2Pos, p2Rot);
     }
 
-    public void UpdateGameState(GameStateMessage gameState)
-    {
-        foreach (var player in gameState.players)
-        {    
-            if (players.TryGetValue(player.id, out var playerController))
-                playerController.SetHealth(player.health);
-
-            if (!string.IsNullOrEmpty(player.attackName) && player.state == "attacking")
-            {
-                playerController.PlayAttackAnimation(player.attackName);
-                string targetId = gameState.players.FirstOrDefault(x => x.id != player.id)?.id;
-                if (targetId != null && players.ContainsKey(targetId))
-                    players[targetId].TakeDamage(player.attackDamage);
-            }
-        }
-    }
-
-    public void SetArena(GameObject arena)
-    {
-        if (arena != null)
-            this.arena = arena;
-    }
-
-    private void SpawnPlayer(PlayerState player, Vector3 position, Quaternion rotation, GameObject arena)
+    private void SpawnPlayer(PlayerState player, Vector3 position, Quaternion rotation)
     {
         GameObject playerPrefab = GetPlayerPrefab(player.avatar);
         if (playerPrefab == null) return;
+        
         GameObject playerObj = Instantiate(playerPrefab, position, rotation);
         playerObj.transform.SetParent(arena.transform);
         playerObj.transform.localScale = new Vector3(1f, 1f, 1f);
@@ -112,13 +135,86 @@ public class GameController : MonoBehaviour
         );
 
         players.Add(player.id, playerController);
+
+        HandlePlayerStatusChanged(player, playerController);
+    }
+
+    private void CheckGameEnd(GameStateMessage newState)
+    {
+        foreach (var player in newState.players)
+        {
+            if (player.health <= 0)
+            {
+                string winnerId = newState.players.FirstOrDefault(p => p.id != player.id)?.id;
+                EndGame(winnerId);
+                break;
+            }
+        }
+    }
+
+    private void EndGame(string winnerId)
+    {
+        if (string.IsNullOrEmpty(winnerId)) return;
+        
+        foreach (var player in players.Values)
+        {
+            if (player.id == winnerId)
+                player.PlayVictoryAnimation();
+            else
+                player.PlayDefeatAnimation();
+        }
+    }
+
+    private void HandleGameStatusChange(string newStatus)
+    {
+        if (newStatus == "finished")
+        {
+            foreach (var player in players.Values)
+                player.PlayIdleAnimation();
+        }
+        else if (newStatus == "ongoing")
+        {
+            foreach (var player in players.Values)
+                player.PlayIdleAnimation();
+        }
+        else
+        {
+            foreach (var player in players.Values)
+                player.PlayIdleAnimation();
+        }
+    }
+
+    private void HandlePlayerStatusChanged(PlayerState player, PlayerController playerController)
+    {
+        playerController.Highlight(player.id == currentState.turnPlayerId);
+
+        if (player.state == "attacking" && !string.IsNullOrEmpty(player.attackName))
+        {
+            playerController.Attack(player.attackName);
+            string targetId = currentState.players.FirstOrDefault(p => p.id != player.id)?.id;
+            if (!string.IsNullOrEmpty(targetId) && players.TryGetValue(targetId, out var targetPlayer))
+                targetPlayer.TakeDamage(player.attackDamage);
+        }
+        else if (player.state == "victory")
+        {
+            playerController.PlayVictoryAnimation();
+        }
+        else if (player.state == "defeat")
+        {
+            playerController.PlayDefeatAnimation();
+        }
+        else
+        {
+            playerController.PlayIdleAnimation();
+        }
     }
 
     private GameObject GetPlayerPrefab(string avatar)
     {
+        if (playerPrefabs == null || playerPrefabs.Length == 0) return null;
         foreach (var prefab in playerPrefabs)
-            if (prefab.name.Equals(avatar, StringComparison.OrdinalIgnoreCase))
+            if (prefab != null && prefab.name.Equals(avatar, StringComparison.OrdinalIgnoreCase))
                 return prefab;
-        return null;
+        return playerPrefabs[0];
     }
 }

@@ -10,67 +10,36 @@ public class MainSceneManager : MonoBehaviour
     [SerializeField] private ARRaycastManager raycastManager;
     [SerializeField] private Camera Camera;
     [SerializeField] private GameController gameController;
+    [SerializeField] private GameObject joinRoomPanel;
+    [SerializeField] private GameObject statusText;
 
     private readonly List<ARRaycastHit> hits = new();
     private GameObject gameArena = null;
     private bool arenaPlaced = false;
-
-    /*[SerializeField] private WebSocketManager wsManager;
-    [SerializeField] private NetworkManager networkManager;
-    [SerializeField] private PlayerSpawner playerSpawner;
-    [SerializeField] private ARSession session;
-    
-    [SerializeField] private GameObject joinRoomPanel;
-    [SerializeField] private GameObject placeArenaBtn;
-    [SerializeField] private TMP_InputField roomCodeInp;
-
-    
-    
-    private bool isGameActive = true; // CHANGE THIS TO FALSE 
-    */
-    //private bool hasConnectedToServer = false;
+    private bool isGameActive = false;
 
     void Start()
     {
         if (raycastManager == null)
             raycastManager = FindObjectOfType<ARRaycastManager>();
 
-        /*if (session == null)
-            session = FindObjectOfType<ARSession>();
-
-        if (wsManager == null)
-            wsManager = FindObjectOfType<WebSocketManager>();
-
-        if (networkManager == null)
-            networkManager = FindObjectOfType<NetworkManager>();
-
-        if (playerSpawner == null)
-            playerSpawner = FindObjectOfType<PlayerSpawner>();
-        */
         if (Camera == null)
             Camera = FindObjectOfType<Camera>();
 
-        /*if (networkManager != null)
-            networkManager.OnConnectionStatusChanged += OnConnectionStatusChanged;
-        */
-        //StartCoroutine(InitializeConnection());   UNCOMMENT THIS TO TEST CONNECTION
+        if (gameController == null)
+            gameController = FindObjectOfType<GameController>();
+        
+        if (gameController != null)
+            gameController.gameObject.SetActive(false);
 
-        //ShowJoinRoomPanel(true);
-        //ShowPlaceArenaButton(false);
-        //ShowGameInterface(false);
+        ShowJoinRoomPanel(true);
+        OnJoinRoomButtonClicked();
     }
 
-    // TO BE CHECKED
-    // here we might not need to update raycasts after finding a plane for the arena
     void Update()
     {
-        if (!arenaPlaced && Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
-        {
+        if (!arenaPlaced && isGameActive && Input.touchCount > 0 &&Input.GetTouch(0).phase == TouchPhase.Began)
             PlaceArena(Input.GetTouch(0).position);
-            arenaPlaced = true;
-            //playerSpawner.SpawnPlayers(gameArena);
-            //return;
-        }
     }
 
     private void PlaceArena(Vector2 screenPos)
@@ -88,6 +57,8 @@ public class MainSceneManager : MonoBehaviour
             gameArena = Instantiate(gameArenaPrefab, pos, rot);
         }
 
+        arenaPlaced = true;
+
         if (gameController != null)
         {
             gameController.gameObject.SetActive(true);
@@ -95,37 +66,68 @@ public class MainSceneManager : MonoBehaviour
         }
     }
 
+    public void OnJoinRoomButtonClicked()
+    {
+        isGameActive = true;
+        ShowJoinRoomPanel(false);
+    }
+
+    public void RestartGame()
+    {
+        ResetArena();
+        ShowJoinRoomPanel(true);
+        isGameActive = false;  
+    }
+
+    private void OnConnectionStatusChanged(bool isConnected)
+    {
+        if (!isConnected && isGameActive)
+        {
+            ResetArena();
+            ShowJoinRoomPanel(true);
+            isGameActive = false;
+        }
+    }
+
+    private void ShowJoinRoomPanel(bool show)
+    {
+        if (joinRoomPanel != null)
+            joinRoomPanel.SetActive(show);
+    }
+
+    private void ResetArena()
+    {
+        arenaPlaced = false;
+        if (gameArena != null)
+        {
+            Destroy(gameArena);
+            gameArena = null;
+        }
+
+        if (gameController != null)
+            gameController.gameObject.SetActive(false);
+    }    
+
+    private void ShowStatus(string message)
+    {
+        if (statusText != null && statusText.TryGetComponent<TextMeshProUGUI>(out var text))
+        {
+            text.text = message;
+            CancelInvoke(nameof(ClearStatus));
+            Invoke(nameof(ClearStatus), 3f);
+        }
+    }
+
+    private void ClearStatus()
+    {
+        if (statusText != null && statusText.TryGetComponent<TextMeshProUGUI>(out var text))
+            text.text = string.Empty;
+    }
+
     /*void OnDestroy()
     {
         if (networkManager != null)
             networkManager.OnConnectionStatusChanged -= OnConnectionStatusChanged;
-    }
-
-    /*public void OnPlaceArenaButtonClicked()
-    {
-        if (isPlacementValid)
-        {
-            PlaceArena();
-            ShowPlaceArenaButton(false);
-        }
-        else
-        {
-            // SET STATUS MSG
-        }
-
-    }*/
-
-    /*public void OnJoinRoomButtonClicked()
-    {
-        if (JoinRoom())
-        {
-            ShowJoinRoomPanel(false);
-            ShowPlaceArenaButton(true);
-        }
-        else
-        {
-            // SET STATUS MSG 
-        }
     }
 
     private bool JoinRoom()
@@ -141,56 +143,14 @@ public class MainSceneManager : MonoBehaviour
         wsManager.JoinRoom(roomCode);
 
         if (networkManager != null)
-            networkManager.SetRoomCode(roomCode);*/
+            networkManager.SetRoomCode(roomCode)
 
         //ShowGameInterface(true);
 
         return true;
     }
-*/
-    
 
-    private void ResetArena()
-    {
-        arenaPlaced = false;
-        if (gameArena != null)
-        {
-            Destroy(gameArena);
-            gameArena = null;
-        }
-    }
-
-    private void OnConnectionStatusChanged(bool isConnected)
-    {
-        isConnected = true; // REMOVE THIS LINE TO TEST CONNECTION
-        if (!isConnected && isGameActive)
-        {
-            Debug.Log("Disconnected from server");
-            ShowJoinRoomPanel(true);
-            ShowPlaceArenaButton(false);
-            //ShowGameInterface(false);
-        }
-    }
-
-    private void ShowPlaceArenaButton(bool show)
-    {
-        if (placeArenaBtn != null)
-            placeArenaBtn.SetActive(show);
-    }
-
-    private void ShowJoinRoomPanel(bool show)
-    {
-        if (joinRoomPanel != null)
-            joinRoomPanel.SetActive(show);
-    }
-
-    /*private void ShowGameInterface(bool show)
-    {
-        if (gameInterface != null)
-            gameInterface.SetActive(show);
-    }
-
-    /*public void SendTestGameState()
+    public void SendTestGameState()
     {
         if (!hasConnectedToServer || wsManager == null)
             return;
@@ -258,12 +218,5 @@ public class MainSceneManager : MonoBehaviour
             yield return new WaitForSeconds(5.0f);
             StartCoroutine(InitializeConnection());
         }
-    }
-
-    private IEnumerator ShowPlaceArenaButtonWhenReady()
-    {
-        yield return new WaitForSeconds(3.0f);
-        if (placeArenaButton != null)
-            placeArenaButton.SetActive(true);
     }*/
 }
