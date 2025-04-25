@@ -1,198 +1,124 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+
+[Serializable]
+public class PlayerState
+{
+    public string id;
+    public string username;
+    public string avatar;
+    public int health;
+    public string attackName;
+    public string state;
+    public int attackDamage;
+}
+
+[Serializable]
+public class GameStateMessage
+{
+    public string type = "game_state";
+    public PlayerState[] players;
+    public string gameStatus;
+}
 
 public class GameController : MonoBehaviour
 {
-    [SerializeField] private GameObject playerPrefab;   /* */
-    [SerializeField] private GameObject attackEffectPrefab; /* */
-    [SerializeField] private Transform arenaTransform;
+    private readonly string fileName = "game_state";
+    private GameStateMessage currentState;
 
-    private string currTurn = "";
-    private int turnCount = 0;
-    private bool gameActive = false;    
-
+    [SerializeField] private GameObject arena;
+    [SerializeField] private GameObject[] attackPrefabs;
+    [SerializeField] private GameObject[] playerPrefabs;
     private readonly Dictionary<string, PlayerController> players = new();
-    private readonly Vector3[] playerPositions = new Vector3[]
+    
+    //private bool gameActive = false;
+    //public string gameStatus;   // "idle", "ongoing", "finished"
+
+    void Start()
     {
-        new(-0.5f, 0, 0),
-        new(0.5f, 0, 0)
-    };
+        TextAsset jsonFile = Resources.Load<TextAsset>(fileName);
+        if (jsonFile == null) return;
+        currentState = JsonUtility.FromJson<GameStateMessage>(jsonFile.text);
+        SpawnPlayers(currentState);
+    }
 
-    public void UpdateGameState(WebSocketManager.GameStateMessage gameState)
+    public void SpawnPlayers(GameStateMessage gameState)
     {
-       if (gameState == null || gameState.players == null)
-            return;
+        if (arena == null)
+            arena = GameObject.FindGameObjectWithTag("GameArena");
 
-        currTurn = gameState.currTurn;
-        turnCount = gameState.turnCount;
+        Transform arenaTransform = arena.transform;
+        Vector3 arenaRight = arenaTransform.right;
 
-        if (arenaTransform == null)
-        {
-            Debug.LogWarning("Arena not ready yet!");
-            GameObject arena = GameObject.FindGameObjectWithTag("GameArena");
-            if (arena == null)
-            {
-                Debug.LogError("Cannot find arena transform");
-                return;
-            }
-            arenaTransform = arena.transform;                
-        }
+        float offsetFromCenter = 6f;
+        float topY = 0f;
+        if (arena.TryGetComponent<Renderer>(out var arenaRenderer))
+            topY = arenaRenderer.bounds.max.y;
 
-        for (int i = 0; i < gameState.players.Length; i++)
-        {
-            var playerState = gameState.players[i];
-            if (string.IsNullOrEmpty(playerState.id))
-                continue;
+        Vector3 p1Pos = arenaTransform.position + arenaRight * offsetFromCenter;
+        Vector3 p2Pos = arenaTransform.position - arenaRight * offsetFromCenter;
 
-            Vector3 worldPos;
-            if (playerState.pos == null)
+        p1Pos.y = topY + 0.01f;
+        p2Pos.y = topY + 0.01f;
+
+        Quaternion p1Rot = Quaternion.LookRotation(-arenaTransform.right, arenaTransform.up);
+        Quaternion p2Rot = Quaternion.LookRotation(arenaTransform.right, arenaTransform.up);
+
+        var players = gameState.players;
+        SpawnPlayer(players[0], p1Pos, p1Rot, arena);
+        SpawnPlayer(players[1], p2Pos, p2Rot, arena);
+    }
+
+    public void UpdateGameState(GameStateMessage gameState)
+    {
+        foreach (var player in gameState.players)
+        {    
+            if (players.TryGetValue(player.id, out var playerController))
+                playerController.SetHealth(player.health);
+
+            if (!string.IsNullOrEmpty(player.attackName) && player.state == "attacking")
             {
-                int posInd = i % playerPositions.Length;
-                worldPos = arenaTransform.TransformPoint(playerPositions[posInd]);
-            }
-            else
-            {
-                worldPos = arenaTransform.TransformPoint(playerState.pos.ToVector3());
-            }
-                
-            if (!players.ContainsKey(playerState.id))
-            {
-                GameObject playerObj = Instantiate(playerPrefab, worldPos, Quaternion.identity);
-                if (playerObj.TryGetComponent<PlayerController>(out var playerController))
-                {
-                    playerController.Initialize(
-                        playerState.id,
-                        playerState.name,
-                        playerState.avatar,
-                        playerState.health,
-                        worldPos
-                    );
-                    players[playerState.id] = playerController;
-                }
-            }
-            else
-            {
-                PlayerController playerController = players[playerState.id];
-                playerController.SetModel(playerState.avatar);
-                playerController.UpdateHealth(playerState.health);
-                StartCoroutine(SmoothMove(playerController.transform, worldPos, 0.5f));
+                playerController.PlayAttackAnimation(player.attackName);
+                string targetId = gameState.players.FirstOrDefault(x => x.id != player.id)?.id;
+                if (targetId != null && players.ContainsKey(targetId))
+                    players[targetId].TakeDamage(player.attackDamage);
             }
         }
-
-        gameActive = true;
-
-        UpdateTurnIndicator();
     }
 
-    public void HandlePlayerAction(WebSocketManager.PlayerActionMessage action)
+    public void SetArena(GameObject arena)
     {
-        if (!gameActive || action == null || string.IsNullOrEmpty(action.playerId))
-            return;
-
-        if (!players.ContainsKey(action.playerId))
-        {
-            Debug.LogError("Player not found: " + action.playerId);
-            return;
-        }
-
-        PlayerController player = players[action.playerId];
-
-        switch (action.attackType)
-        {
-            case "attack":
-                HandleAttack(player, action);
-                break;
-            case "move":
-                break;
-            default:
-                Debug.LogWarning("Unknown action type: " + action.attackType);
-                break;
-        }
+        if (arena != null)
+            this.arena = arena;
     }
 
-    private void UpdateTurnIndicator()
+    private void SpawnPlayer(PlayerState player, Vector3 position, Quaternion rotation, GameObject arena)
     {
-        // Implementation depends on UI setup
-        Debug.Log($"Current turn: {currTurn}, Turn count: {turnCount}");
+        GameObject playerPrefab = GetPlayerPrefab(player.avatar);
+        if (playerPrefab == null) return;
+        GameObject playerObj = Instantiate(playerPrefab, position, rotation);
+        playerObj.transform.SetParent(arena.transform);
+        playerObj.transform.localScale = new Vector3(1f, 1f, 1f);
+
+        PlayerController playerController = playerObj.GetComponent<PlayerController>();
+        playerController.Initialize(
+            player.id,
+            player.username,
+            player.avatar,
+            player.health
+        );
+
+        players.Add(player.id, playerController);
     }
 
-    private void HandleAttack(PlayerController attacker, WebSocketManager.PlayerActionMessage action)
+    private GameObject GetPlayerPrefab(string avatar)
     {
-        attacker.PlayAttackAnimation(action.attackName);
-
-        if (string.IsNullOrEmpty(action.targetId) || !players.ContainsKey(action.targetId))
-        {
-            Debug.LogError("Target not found: " + action.targetId);
-            return;
-        }
-
-        PlayerController target = players[action.targetId];
-
-        if (attackEffectPrefab != null)
-        {
-            GameObject effect = Instantiate(attackEffectPrefab);
-            StartCoroutine(AnimateEffect(effect, attacker.transform.position, target.transform.position));
-        }
-
-        StartCoroutine(DelayedAction(0.5f, () =>
-        {
-            target.TakeDamage(action.damage);
-        }));
-    }
-
-    private IEnumerator AnimateEffect(GameObject effect, Vector3 start, Vector3 end)
-    {
-        if (effect == null)
-            yield break;
-
-        float duration = 0.5f;
-        float elapsed = 0f;
-
-        effect.transform.position = start;
-
-        while (elapsed < duration)
-        {
-            float t = elapsed / duration;
-            effect.transform.position = Vector3.Lerp(start, end, t);
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-
-        effect.transform.position = end;
-
-        if (effect.TryGetComponent<ParticleSystem>(out var ps))
-        {
-            ps.Play();
-            float destroyDelay = ps.main.duration + ps.main.startLifetimeMultiplier;
-            Destroy(effect, destroyDelay);
-        }
-        else
-        {
-            Destroy(effect, 0.5f);
-        }
-    }
-
-    private IEnumerator SmoothMove(Transform objTransform, Vector3 targetPos, float duration)
-    {
-        Vector3 startPos = objTransform.position;
-        float elapsed = 0f;
-
-        while (elapsed < duration)
-        {
-            float t = elapsed / duration;
-            objTransform.position = Vector3.Lerp(startPos, targetPos, t);
-            elapsed += Time.deltaTime;
-            yield return null;
-        }
-
-        objTransform.position = targetPos;
-    }
-
-    private IEnumerator DelayedAction(float delay, Action action)
-    {
-        yield return new WaitForSeconds(delay);
-        action?.Invoke();
+        foreach (var prefab in playerPrefabs)
+            if (prefab.name.Equals(avatar, StringComparison.OrdinalIgnoreCase))
+                return prefab;
+        return null;
     }
 }

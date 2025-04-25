@@ -2,30 +2,32 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
+using UnityEngine.XR.ARSubsystems;
 
 public class MainSceneManager : MonoBehaviour
 {
-    [SerializeField] private WebSocketManager wsManager;
-    [SerializeField] private NetworkManager networkManager;
-    [SerializeField] private PlayerSpawner playerSpawner;
-    [SerializeField] private ARRaycastManager raycastManager;
-    [SerializeField] private ARSession session;
-    [SerializeField] private Camera Camera;
     [SerializeField] private GameObject gameArenaPrefab;
-    [SerializeField] private GameObject joinRoomPanel;
-    [SerializeField] private GameObject placeArenaBtn;
-    [SerializeField] private TMP_InputField roomCodeInp;
-
-    //private readonly Dictionary<string, PlayerController> players = new();
-    //private readonly Vector3[] playerPositions = new();
-    //private string currTurn = "";
-    //private int turnCount = 0;
+    [SerializeField] private ARRaycastManager raycastManager;
+    [SerializeField] private Camera Camera;
+    [SerializeField] private GameController gameController;
 
     private readonly List<ARRaycastHit> hits = new();
     private GameObject gameArena = null;
     private bool arenaPlaced = false;
-    private bool isGameActive = true; // CHANGE THIS TO FALSE 
 
+    /*[SerializeField] private WebSocketManager wsManager;
+    [SerializeField] private NetworkManager networkManager;
+    [SerializeField] private PlayerSpawner playerSpawner;
+    [SerializeField] private ARSession session;
+    
+    [SerializeField] private GameObject joinRoomPanel;
+    [SerializeField] private GameObject placeArenaBtn;
+    [SerializeField] private TMP_InputField roomCodeInp;
+
+    
+    
+    private bool isGameActive = true; // CHANGE THIS TO FALSE 
+    */
     //private bool hasConnectedToServer = false;
 
     void Start()
@@ -33,7 +35,7 @@ public class MainSceneManager : MonoBehaviour
         if (raycastManager == null)
             raycastManager = FindObjectOfType<ARRaycastManager>();
 
-        if (session == null)
+        /*if (session == null)
             session = FindObjectOfType<ARSession>();
 
         if (wsManager == null)
@@ -44,17 +46,17 @@ public class MainSceneManager : MonoBehaviour
 
         if (playerSpawner == null)
             playerSpawner = FindObjectOfType<PlayerSpawner>();
-
+        */
         if (Camera == null)
             Camera = FindObjectOfType<Camera>();
 
-        if (networkManager != null)
+        /*if (networkManager != null)
             networkManager.OnConnectionStatusChanged += OnConnectionStatusChanged;
-
+        */
         //StartCoroutine(InitializeConnection());   UNCOMMENT THIS TO TEST CONNECTION
 
-        ShowJoinRoomPanel(true);
-        ShowPlaceArenaButton(false);
+        //ShowJoinRoomPanel(true);
+        //ShowPlaceArenaButton(false);
         //ShowGameInterface(false);
     }
 
@@ -66,12 +68,34 @@ public class MainSceneManager : MonoBehaviour
         {
             PlaceArena(Input.GetTouch(0).position);
             arenaPlaced = true;
-            playerSpawner.SpawnPlayers(gameArena);
-            return;
+            //playerSpawner.SpawnPlayers(gameArena);
+            //return;
         }
     }
 
-    void OnDestroy()
+    private void PlaceArena(Vector2 screenPos)
+    {
+        if (raycastManager.Raycast(screenPos, hits, TrackableType.PlaneWithinPolygon))
+        {
+            var pose = hits[0].pose;
+            gameArena = Instantiate(gameArenaPrefab, pose.position, pose.rotation);
+        }
+        else
+        {
+            Vector3 pos = Camera.transform.position + Camera.transform.forward * 2f;
+            pos.y -= 1.5f;
+            Quaternion rot = Quaternion.Euler(45f, Camera.transform.eulerAngles.y, 0);
+            gameArena = Instantiate(gameArenaPrefab, pos, rot);
+        }
+
+        if (gameController != null)
+        {
+            gameController.gameObject.SetActive(true);
+            gameController.SetArena(gameArena);
+        }
+    }
+
+    /*void OnDestroy()
     {
         if (networkManager != null)
             networkManager.OnConnectionStatusChanged -= OnConnectionStatusChanged;
@@ -91,7 +115,7 @@ public class MainSceneManager : MonoBehaviour
 
     }*/
 
-    public void OnJoinRoomButtonClicked()
+    /*public void OnJoinRoomButtonClicked()
     {
         if (JoinRoom())
         {
@@ -123,30 +147,8 @@ public class MainSceneManager : MonoBehaviour
 
         return true;
     }
-
-    private void PlaceArena(Vector2 screenPos)
-    {
-        if (raycastManager.Raycast(screenPos, hits, UnityEngine.XR.ARSubsystems.TrackableType.Planes))
-        {
-            if (gameArena == null)
-                gameArena = Instantiate(gameArenaPrefab, hits[0].pose.position, hits[0].pose.rotation);
-            else
-                gameArena.transform.SetPositionAndRotation(hits[0].pose.position, hits[0].pose.rotation);
-        }
-        else
-        {
-            Vector3 pos = Camera.transform.position + Camera.transform.forward * 2.0f;
-            pos.y = Camera.transform.position.y - 3.0f;
-            pos.z = Camera.transform.position.z + 1.5f;
-
-            Quaternion rot = Quaternion.Euler(45f, Camera.main.transform.eulerAngles.y, 0);
-
-            if (gameArena == null)
-                gameArena = Instantiate(gameArenaPrefab, pos, rot);
-            else
-                gameArena.transform.SetPositionAndRotation(pos, rot);
-        }
-    }
+*/
+    
 
     private void ResetArena()
     {

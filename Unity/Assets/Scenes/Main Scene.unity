@@ -1065,9 +1065,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 62817d35fa6890b43ab4ff1021037729, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  player1Prefab: {fileID: 919132149155446097, guid: 9fcc294516175ec4c8f48fd04e8086f8, type: 3}
-  player2Prefab: {fileID: 919132149155446097, guid: 47fdadcb184b0654b89159926c545cbd, type: 3}
-  arena: {fileID: 5522576289842606490, guid: 6dca2ac205d338d40b4c317990be84f7, type: 3}
+  player1Prefab: {fileID: 8271767259986621542, guid: d9a52e491b378624f83c8d2f705afe1f, type: 3}
+  player2Prefab: {fileID: 4959202091283174000, guid: 5b6bfcf54628afa4098bff1ba1789854, type: 3}
 --- !u!4 &932770613
 Transform:
   m_ObjectHideFlags: 0
@@ -1116,10 +1115,9 @@ MonoBehaviour:
   networkManager: {fileID: 1099687489}
   playerSpawner: {fileID: 932770612}
   raycastManager: {fileID: 1775594513}
-  planeManager: {fileID: 0}
   session: {fileID: 989775841}
   Camera: {fileID: 1722859281}
-  gameArenaPrefab: {fileID: 5522576289842606490, guid: 6dca2ac205d338d40b4c317990be84f7, type: 3}
+  gameArenaPrefab: {fileID: 3201316790093378700, guid: aff665d26c4313c4e84aefd939fd3a3b, type: 3}
   joinRoomPanel: {fileID: 2103721691}
   placeArenaBtn: {fileID: 714745483}
   roomCodeInp: {fileID: 1350941926}
@@ -1904,7 +1902,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player1Prefab: {fileID: 919132149155446097, guid: 9fcc294516175ec4c8f48fd04e8086f8, type: 3}
   player2Prefab: {fileID: 919132149155446097, guid: 47fdadcb184b0654b89159926c545cbd, type: 3}
-  arena: {fileID: 0}
 --- !u!1 &1775594509
 GameObject:
   m_ObjectHideFlags: 0

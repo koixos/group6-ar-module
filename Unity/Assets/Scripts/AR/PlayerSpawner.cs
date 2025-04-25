@@ -5,14 +5,10 @@ public class PlayerSpawner : MonoBehaviour
     [SerializeField] private GameObject player1Prefab;
     [SerializeField] private GameObject player2Prefab;
 
-    private GameObject gameArena;
-
     public void SpawnPlayers(GameObject arena)
     {
         if (arena == null)
             arena = GameObject.FindGameObjectWithTag("GameArena");
-
-        gameArena = arena;
 
         Transform arenaTransform = arena.transform;
         Vector3 arenaRight = arenaTransform.right;
@@ -31,15 +27,15 @@ public class PlayerSpawner : MonoBehaviour
         Quaternion p1Rot = Quaternion.LookRotation(-arenaTransform.right, arenaTransform.up);
         Quaternion p2Rot = Quaternion.LookRotation(arenaTransform.right, arenaTransform.up);
 
-        SpawnPlayer(player1Prefab, p1Pos, p1Rot);
-        SpawnPlayer(player2Prefab, p2Pos, p2Rot);
+        SpawnPlayer(player1Prefab, p1Pos, p1Rot, arena);
+        SpawnPlayer(player2Prefab, p2Pos, p2Rot, arena);
     }
 
-    private void SpawnPlayer(GameObject playerPrefab, Vector3 position, Quaternion rotation)
+    private void SpawnPlayer(GameObject playerPrefab, Vector3 position, Quaternion rotation, GameObject arena)
     {
         if (playerPrefab == null) return;
         GameObject player = Instantiate(playerPrefab, position, rotation);
-        player.transform.SetParent(gameArena.transform);
+        player.transform.SetParent(arena.transform);
         player.transform.localScale = new Vector3(1f, 1f, 1f);
     }
 }

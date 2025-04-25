@@ -1,0 +1,24 @@
+{
+    "gameStatus": "ongoing",
+    "currentTurnPlayerId": "p1",
+    "players": [
+        {
+            "id": "p1",
+            "username": "WarriorQueen",
+            "health": 85,
+            "modelName": "GreatSword",
+            "state": "attacking",
+            "attackType": "fireball",
+            "attackDamage": 15
+        },
+        {
+            "id": "p2",
+            "username": "Voldemort",
+            "health": 102,
+            "modelName": "Pumpkinhulk",
+            "state": "idle",
+            "attackType": "",
+            "attackDamage": 0
+        }
+    ]
+}
