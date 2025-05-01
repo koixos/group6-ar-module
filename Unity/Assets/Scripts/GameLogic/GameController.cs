@@ -3,44 +3,28 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
-[Serializable]
-public class PlayerState
-{
-    public string id;
-    public string username;
-    public string avatar;
-    public int health;
-    public string state;
-    public string attackName = "";
-    public int attackDamage = 0;
-}
-
-[Serializable]
-public class GameStateMessage
-{
-    public PlayerState[] players;
-    public string gameStatus;
-    public string turnPlayerId;
-}
-
 public class GameController : MonoBehaviour
 {
     private readonly string fileName = "game_state";
     private readonly float updateInterval = 1.0f;
     private GameStateMessage currentState;
     private float lastUpdateTime = 0f;
-
-    [SerializeField] private GameObject arena;
+    private GameObject arena;
+    
     [SerializeField] private GameObject[] attackPrefabs;
     [SerializeField] private GameObject[] playerPrefabs;
     private readonly Dictionary<string, PlayerController> players = new();
 
     void Start()
     {
-        LoadInitialGameState();
+        TextAsset jsonFile = Resources.Load<TextAsset>(fileName);
+        if (jsonFile == null) return;
+        currentState = JsonUtility.FromJson<GameStateMessage>(jsonFile.text);
+        if (currentState == null || currentState.players == null) return;
+        SpawnPlayers();
     }
 
-    void Update()
+    /*void Update()
     {
         lastUpdateTime += Time.deltaTime;
         if (lastUpdateTime >= updateInterval)
@@ -48,21 +32,12 @@ public class GameController : MonoBehaviour
             lastUpdateTime = 0f;
             UpdateGameState();
         }
-    }
+    }*/
 
     public void SetArena(GameObject arena)
     {
-        if (arena != null)
-            this.arena = arena;
-    }
-
-    private void LoadInitialGameState()
-    {
-        TextAsset jsonFile = Resources.Load<TextAsset>(fileName);
-        if (jsonFile == null) return;
-        currentState = JsonUtility.FromJson<GameStateMessage>(jsonFile.text);
-        if (currentState == null || currentState.players == null) return;
-        SpawnPlayers();
+        if (this.arena != null) return;
+        this.arena = arena;
     }
 
     private void UpdateGameState()
@@ -91,11 +66,6 @@ public class GameController : MonoBehaviour
 
     private void SpawnPlayers()
     {
-        if (arena == null)
-            arena = GameObject.FindGameObjectWithTag("GameArena");
-
-        if (arena == null) return;
-
         Transform arenaTransform = arena.transform;
         Vector3 arenaRight = arenaTransform.right;
 
@@ -119,14 +89,15 @@ public class GameController : MonoBehaviour
 
     private void SpawnPlayer(PlayerState player, Vector3 position, Quaternion rotation)
     {
-        GameObject playerPrefab = GetPlayerPrefab(player.avatar);
-        if (playerPrefab == null) return;
-        
-        GameObject playerObj = Instantiate(playerPrefab, position, rotation);
+        Debug.Log(player.username + " - " + player.avatar + "\n");
+        var prefab = GetPlayerPrefab(player.avatar);
+        if (prefab == null) return;
+
+        GameObject playerObj = Instantiate(prefab, position, rotation);
         playerObj.transform.SetParent(arena.transform);
         playerObj.transform.localScale = new Vector3(1f, 1f, 1f);
 
-        PlayerController playerController = playerObj.GetComponent<PlayerController>();
+        PlayerController playerController = playerObj.AddComponent<PlayerController>();
         playerController.Initialize(
             player.id,
             player.username,
@@ -186,11 +157,11 @@ public class GameController : MonoBehaviour
 
     private void HandlePlayerStatusChanged(PlayerState player, PlayerController playerController)
     {
-        playerController.Highlight(player.id == currentState.turnPlayerId);
+        playerController.Highlight(player.id == currentState.currentTurnPlayerId);
 
-        if (player.state == "attacking" && !string.IsNullOrEmpty(player.attackName))
+        if (player.state == "attacking" && !string.IsNullOrEmpty(player.attackType))
         {
-            playerController.Attack(player.attackName);
+            playerController.Attack(player.attackType);
             string targetId = currentState.players.FirstOrDefault(p => p.id != player.id)?.id;
             if (!string.IsNullOrEmpty(targetId) && players.TryGetValue(targetId, out var targetPlayer))
                 targetPlayer.TakeDamage(player.attackDamage);
@@ -209,12 +180,37 @@ public class GameController : MonoBehaviour
         }
     }
 
-    private GameObject GetPlayerPrefab(string avatar)
+    private GameObject GetPlayerPrefab(string modelName)
     {
-        if (playerPrefabs == null || playerPrefabs.Length == 0) return null;
-        foreach (var prefab in playerPrefabs)
-            if (prefab != null && prefab.name.Equals(avatar, StringComparison.OrdinalIgnoreCase))
+        var avatars = Resources.LoadAll<GameObject>($"Avatars");
+        foreach (var prefab in avatars)
+        {
+            if (prefab.name == modelName)
+            {
+                Debug.Log($"Found avatar prefab: {prefab.name}");
                 return prefab;
-        return playerPrefabs[0];
+            }
+        }
+        return null;
     }
+}
+
+[Serializable]
+public class PlayerState
+{
+    public string id;
+    public string username;
+    public string avatar;
+    public int health;
+    public string state;
+    public string attackType = "";
+    public int attackDamage = 0;
+}
+
+[Serializable]
+public class GameStateMessage
+{
+    public PlayerState[] players;
+    public string gameStatus;
+    public string currentTurnPlayerId;
 }

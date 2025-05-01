@@ -1936,11 +1936,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9af0cb8926daa9c44a252570174c5cbd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  arena: {fileID: 0}
   attackPrefabs: []
   playerPrefabs:
-  - {fileID: 8271767259986621542, guid: d9a52e491b378624f83c8d2f705afe1f, type: 3}
   - {fileID: 4959202091283174000, guid: 5b6bfcf54628afa4098bff1ba1789854, type: 3}
+  - {fileID: 8271767259986621542, guid: d9a52e491b378624f83c8d2f705afe1f, type: 3}
 --- !u!4 &1987661511
 Transform:
   m_ObjectHideFlags: 0

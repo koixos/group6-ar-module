@@ -5,8 +5,8 @@
         {
             "id": "p1",
             "username": "WarriorQueen",
+            "avatar": "maria",
             "health": 85,
-            "modelName": "maria",
             "state": "attacking",
             "attackType": "fireball",
             "attackDamage": 15
@@ -14,8 +14,8 @@
         {
             "id": "p2",
             "username": "Voldemort",
+            "avatar": "pumpkinHulk",
             "health": 102,
-            "modelName": "pumpkinhulk",
             "state": "idle",
             "attackType": "",
             "attackDamage": 0

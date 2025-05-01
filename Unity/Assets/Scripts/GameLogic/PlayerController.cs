@@ -29,7 +29,6 @@ public class PlayerController : MonoBehaviour
         if (nameText != null)
             nameText.text = username;
 
-        SetAvatar(modelName);
         SetHealth(health);
     }
 
@@ -146,13 +145,5 @@ public class PlayerController : MonoBehaviour
         Transform existingAvatar = transform.Find("Avatar");
         if (existingAvatar != null)
             Destroy(existingAvatar.gameObject);
-
-        GameObject avatarPrefab = Resources.Load<GameObject>($"Avatars/{modelName}");
-        if (avatarPrefab != null)
-        {
-            GameObject avatarInstance = Instantiate(avatarPrefab, transform);
-            avatarInstance.name = "Avatar";
-            animator = avatarInstance.GetComponent<Animator>();
-        }
     }
 }
