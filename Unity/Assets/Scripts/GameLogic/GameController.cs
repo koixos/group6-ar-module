@@ -17,22 +17,20 @@ public class GameController : MonoBehaviour
 
     void Start()
     {
-        TextAsset jsonFile = Resources.Load<TextAsset>(fileName);
-        if (jsonFile == null) return;
-        currentState = JsonUtility.FromJson<GameStateMessage>(jsonFile.text);
+        currentState = GetCurrentState();
         if (currentState == null || currentState.players == null) return;
         SpawnPlayers();
     }
 
-    /*void Update()
+    void Update()
     {
         lastUpdateTime += Time.deltaTime;
         if (lastUpdateTime >= updateInterval)
         {
             lastUpdateTime = 0f;
-            UpdateGameState();
+            UpdateGame();
         }
-    }*/
+    }
 
     public void SetArena(GameObject arena)
     {
@@ -40,28 +38,17 @@ public class GameController : MonoBehaviour
         this.arena = arena;
     }
 
-    private void UpdateGameState()
+    private void UpdateGame()
     {
-        TextAsset jsonFile = Resources.Load<TextAsset>(fileName);
-        if (jsonFile == null) return;
-        GameStateMessage newState = JsonUtility.FromJson<GameStateMessage>(jsonFile.text);
-        ProcessGameStateUpdate(newState);
-    }
-
-    private void ProcessGameStateUpdate(GameStateMessage newState)
-    {
+        var newState = GetCurrentState();
         if (newState == null || newState.players == null) return;
 
-        if (newState.gameStatus != currentState.gameStatus)
-            HandleGameStatusChange(newState.gameStatus);
-
         currentState = newState;
+        foreach (var player in currentState.players)
+            if (players.TryGetValue(player.id, out var controller))
+                HandlePlayerStateChange(player, controller);            
 
-        foreach (var player in newState.players)
-            if (players.TryGetValue(player.id, out var playerController))
-                HandlePlayerStatusChanged(player, playerController);
-
-        CheckGameEnd(newState);
+        //CheckGameEnd(newState);
     }
 
     private void SpawnPlayers()
@@ -89,7 +76,6 @@ public class GameController : MonoBehaviour
 
     private void SpawnPlayer(PlayerState player, Vector3 position, Quaternion rotation)
     {
-        Debug.Log(player.username + " - " + player.avatar + "\n");
         var prefab = GetPlayerPrefab(player.avatar);
         if (prefab == null) return;
 
@@ -106,11 +92,9 @@ public class GameController : MonoBehaviour
         );
 
         players.Add(player.id, playerController);
-
-        HandlePlayerStatusChanged(player, playerController);
     }
 
-    private void CheckGameEnd(GameStateMessage newState)
+    /*private void CheckGameEnd(GameStateMessage newState)
     {
         foreach (var player in newState.players)
         {
@@ -136,26 +120,20 @@ public class GameController : MonoBehaviour
         }
     }
 
-    private void HandleGameStatusChange(string newStatus)
+    /*private void HandleGameStatusChange(string newStatus)
     {
         if (newStatus == "finished")
-        {
             foreach (var player in players.Values)
                 player.PlayIdleAnimation();
-        }
         else if (newStatus == "ongoing")
-        {
             foreach (var player in players.Values)
                 player.PlayIdleAnimation();
-        }
         else
-        {
             foreach (var player in players.Values)
                 player.PlayIdleAnimation();
-        }
-    }
+    }*/
 
-    private void HandlePlayerStatusChanged(PlayerState player, PlayerController playerController)
+    private void HandlePlayerStateChange(PlayerState player, PlayerController playerController)
     {
         playerController.Highlight(player.id == currentState.currentTurnPlayerId);
 
@@ -165,33 +143,31 @@ public class GameController : MonoBehaviour
             string targetId = currentState.players.FirstOrDefault(p => p.id != player.id)?.id;
             if (!string.IsNullOrEmpty(targetId) && players.TryGetValue(targetId, out var targetPlayer))
                 targetPlayer.TakeDamage(player.attackDamage);
+            return;
         }
-        else if (player.state == "victory")
-        {
+        
+        if (player.state == "winner")
             playerController.PlayVictoryAnimation();
-        }
-        else if (player.state == "defeat")
-        {
+        else if (player.state == "dead")
             playerController.PlayDefeatAnimation();
-        }
         else
-        {
             playerController.PlayIdleAnimation();
-        }
     }
 
     private GameObject GetPlayerPrefab(string modelName)
     {
         var avatars = Resources.LoadAll<GameObject>($"Avatars");
         foreach (var prefab in avatars)
-        {
             if (prefab.name == modelName)
-            {
-                Debug.Log($"Found avatar prefab: {prefab.name}");
                 return prefab;
-            }
-        }
         return null;
+    }
+
+    private GameStateMessage GetCurrentState()
+    {
+        TextAsset jsonFile = Resources.Load<TextAsset>(fileName);
+        if (jsonFile == null) return null;
+        return JsonUtility.FromJson<GameStateMessage>(jsonFile.text);
     }
 }
 
@@ -211,6 +187,6 @@ public class PlayerState
 public class GameStateMessage
 {
     public PlayerState[] players;
-    public string gameStatus;
+    public string gameState;
     public string currentTurnPlayerId;
 }

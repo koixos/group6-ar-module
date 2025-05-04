@@ -452,7 +452,7 @@ GameObject:
   - component: {fileID: 304651681}
   - component: {fileID: 304651682}
   m_Layer: 0
-  m_Name: WebSocket Manager
+  m_Name: WebSocketBridge
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -482,10 +482,9 @@ MonoBehaviour:
   m_GameObject: {fileID: 304651680}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 19e90641f09d1084c89a4b753016dd27, type: 3}
+  m_Script: {fileID: 11500000, guid: 4d27f6dbc14dfa046bb0eb15ddd029bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameController: {fileID: 0}
 --- !u!1 &464482864
 GameObject:
   m_ObjectHideFlags: 0
@@ -550,7 +549,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 840ca32964b25fd46a8f4f6143404922, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  wsManager: {fileID: 304651682}
+  wsManager: {fileID: 0}
   pingInterval: 5
   reconnectDelay: 3
   maxQeueuedMsgs: 60
@@ -842,55 +841,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1099687486
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1099687488}
-  - component: {fileID: 1099687489}
-  m_Layer: 0
-  m_Name: Network Manager
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1099687488
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1099687486}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1099687489
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1099687486}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 840ca32964b25fd46a8f4f6143404922, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  wsManager: {fileID: 304651682}
-  pingInterval: 5
-  reconnectDelay: 3
-  maxQeueuedMsgs: 60
-  processingDelay: 0.016
 --- !u!1 &1350941922
 GameObject:
   m_ObjectHideFlags: 0
@@ -2041,7 +1991,6 @@ SceneRoots:
   - {fileID: 989775843}
   - {fileID: 705507995}
   - {fileID: 304651681}
-  - {fileID: 1099687488}
   - {fileID: 968190168}
   - {fileID: 619326957}
   - {fileID: 1877891088}

@@ -4,6 +4,7 @@ public class ToDo : MonoBehaviour
 {
     /*
      * arena prefab deðiþtirilecek - rotasyon ayarlarý vs yapmak lazým
+     * highlight effect lazým
      * 
      *** MainSceneManager - ARSetup - GameController scriptlerini birleþtirdim.
      * NetworkManager ve WebSocketManager scriptleri þu an active deðil.

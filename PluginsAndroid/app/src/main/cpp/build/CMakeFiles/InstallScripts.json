@@ -1,0 +1,7 @@
+{
+	"InstallScripts" : 
+	[
+		"C:/workspace/projects/project/PluginsAndroid/app/src/main/cpp/build/cmake_install.cmake"
+	],
+	"Parallel" : false
+}
