@@ -1,42 +1,77 @@
-using System.Collections;
-using System.Collections.Generic;
+using System;
+using System.Collections.Concurrent;
 using System.Runtime.InteropServices;
 using UnityEngine;
 
 public class WebSocketBridge : MonoBehaviour
 {
-    [DllImport("UnityWebSocketPlugin")]
-    private static extern void InitializeWebSocket(string url);
+    private const string PLUGIN_NAME = "UnityWebSocketPlugin";
+    private static readonly ConcurrentQueue<string> messageQueue = new();
 
-    [DllImport("UnityWebSocketPlugin")]
-    private static extern void SendMsg(string msg);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void MessageCallback(IntPtr msgPtr);
 
-    [DllImport("UnityWebSocketPlugin")]
+    [DllImport(PLUGIN_NAME)]
+    private static extern void InitializeWebSocket(string url, MessageCallback cb);
+
+    //[DllImport(PLUGIN_NAME)]
+    //private static extern void SendMsg(string msg);
+
+    [DllImport(PLUGIN_NAME)]
     private static extern void CloseWebSocket();
 
-    [DllImport("UnityWebSocketPlugin")]
+    [DllImport(PLUGIN_NAME)]
     private static extern bool IsConnected();
+
+    [AOT.MonoPInvokeCallback(typeof(MessageCallback))]
+    static void OnMessageReceived(IntPtr msgPtr)
+    {
+        try
+        {
+            if (msgPtr == IntPtr.Zero)
+            {
+                Debug.LogError("[Native Callback] Received null message pointer.");
+                return;
+            }
+
+            string msg = Marshal.PtrToStringAnsi(msgPtr);
+            Debug.Log("[Native Callback] Received: " + msg);
+
+            messageQueue.Enqueue(msg);
+        }
+        catch (Exception e)
+        {
+            Debug.LogError("Callback exception: " + e);
+        }
+    }
 
     void Start()
     {
-#if UNITY_ANDROID && !UNITY_EDITOR
-        InitializeWebSocket("ws://192.168.1.5:8080");
-        Invoke("SendTestMsg", 3f);
-#endif
+        InitializeWebSocket("ws://localhost:8080", OnMessageReceived);
     }
 
-    void SendTestMsg()
+    void Update()
     {
-        if (IsConnected())
-            SendMsg("{\"type\": \"hello\", \"content\": \"Hello world!\"}");
-        else
-            Debug.Log("WebSocket connection failed.");
+        while (messageQueue.TryDequeue(out var msg))
+        {
+            Debug.Log("[Main Thread] Processing message: " + msg);
+
+            var obj = GameObject.Find("GameController");
+            if (obj == null)
+            {
+                Debug.LogError("GameController not found.");
+                return;
+            }
+
+            if (obj.TryGetComponent<GameController>(out var controller))
+                controller.OnWebSocketMsg(msg);
+            else
+                Debug.LogError("GameController not found or missing component.");
+        }
     }
 
-    private void OnDestroy()
+    void OnDestroy()
     {
-#if UNITY_ANDROID && !UNITY_EDITOR
         CloseWebSocket();
-#endif
     }
 }

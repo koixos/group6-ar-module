@@ -1,3 +1,5 @@
 # ninja log v6
-23	19514	7680777906568621	CMakeFiles/UnityWebSocketPlugin.dir/WebSocketPlugin.cpp.o	9d0adc8916cb765c
-19537	19867	7680778101594037	libUnityWebSocketPlugin.so	ca715bd371a865fa
+64	22831	7684344132281404	CMakeFiles/UnityWebSocketPlugin.dir/WebSocketPlugin.cpp.o	9b60fbccaa3a22eb
+22834	23123	7684344359977665	C:/Workspace/group-project/PluginsAndroid/app/src/main/cpp/Unity/Assets/Plugins/Android/arm64-v8a/libUnityWebSocketPlugin.so	444ebee2253232b6
+37	20649	7684350361435630	CMakeFiles/UnityWebSocketPlugin.dir/WebSocketPlugin.cpp.o	9b60fbccaa3a22eb
+20651	20956	7684350567576610	C:/Workspace/group-project/PluginsAndroid/app/src/main/cpp/Unity/Assets/Plugins/Android/arm64-v8a/libUnityWebSocketPlugin.so	444ebee2253232b6

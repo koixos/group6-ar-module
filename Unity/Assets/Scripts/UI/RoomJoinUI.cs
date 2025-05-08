@@ -13,14 +13,12 @@ public class RoomJoinUI : MonoBehaviour
     [SerializeField] private TMP_InputField roomCodeInp;
     [SerializeField] private TextMeshProUGUI connectionStatusText;
 
-    private WebSocketManager wsManager;
     private GameController gameController;
     private QRScanner qRScanner;
     private Coroutine connectionCheckCoroutine;
 
     void Start()
     {
-        wsManager = FindObjectOfType<WebSocketManager>();
         gameController = FindObjectOfType<GameController>();
         qRScanner = FindObjectOfType<QRScanner>();
 
@@ -65,20 +63,8 @@ public class RoomJoinUI : MonoBehaviour
             return;
         }
 
-        if (wsManager == null)
-        {
-            ShowConnectionStatus("WebSocketManager not found", Color.red);
-            return;
-        }
-
-        if (!wsManager.IsWebSocketConnected())
-        {
-            ShowConnectionStatus("Not connected to server", Color.red);
-            return;
-        }
-
         string roomCode = roomCodeInp.text.Trim();
-        wsManager.JoinRoom(roomCode);
+        //wsManager.JoinRoom(roomCode);
         ShowConnectionStatus("Joining room " + roomCode + "...", Color.yellow);
 
         if (roomJoinPanel != null)
@@ -135,8 +121,8 @@ public class RoomJoinUI : MonoBehaviour
     {
         while (true)
         {
-            if (wsManager != null && !wsManager.IsWebSocketConnected())
-                ShowConnectionStatus("Connected to server", Color.yellow);
+            //if (wsManager != null && !wsManager.IsWebSocketConnected())
+                //ShowConnectionStatus("Connected to server", Color.yellow);
             yield return new WaitForSeconds(2.0f);
         }
     }

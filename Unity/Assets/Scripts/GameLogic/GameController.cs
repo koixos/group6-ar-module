@@ -4,51 +4,32 @@ using System.Linq;
 using UnityEngine;
 
 public class GameController : MonoBehaviour
-{
-    private readonly string fileName = "game_state";
-    private readonly float updateInterval = 1.0f;
-    private GameStateMessage currentState;
-    private float lastUpdateTime = 0f;
-    private GameObject arena;
-    
+{  
     [SerializeField] private GameObject[] attackPrefabs;
     [SerializeField] private GameObject[] playerPrefabs;
     private readonly Dictionary<string, PlayerController> players = new();
+    private GameState currentState;
+    private GameObject arena;
+    private int turnCounter = 0;
 
-    void Start()
+    public void OnWebSocketMsg(string json)
     {
-        currentState = GetCurrentState();
-        if (currentState == null || currentState.players == null) return;
-        SpawnPlayers();
-    }
+        Debug.Log($"WebSocket message: {json}");
+        GameState state = JsonUtility.FromJson<GameState>(json);
+        if (state == null || state.players == null || state.players.Length == 0) return;
+        currentState = state;
+        ++turnCounter;
 
-    void Update()
-    {
-        lastUpdateTime += Time.deltaTime;
-        if (lastUpdateTime >= updateInterval)
-        {
-            lastUpdateTime = 0f;
-            UpdateGame();
-        }
+        if (turnCounter == 1)
+            SpawnPlayers();
+        
+        ProcessGameState();
     }
 
     public void SetArena(GameObject arena)
     {
         if (this.arena != null) return;
         this.arena = arena;
-    }
-
-    private void UpdateGame()
-    {
-        var newState = GetCurrentState();
-        if (newState == null || newState.players == null) return;
-
-        currentState = newState;
-        foreach (var player in currentState.players)
-            if (players.TryGetValue(player.id, out var controller))
-                HandlePlayerStateChange(player, controller);            
-
-        //CheckGameEnd(newState);
     }
 
     private void SpawnPlayers()
@@ -70,6 +51,8 @@ public class GameController : MonoBehaviour
         Quaternion p1Rot = Quaternion.LookRotation(-arenaTransform.right, arenaTransform.up);
         Quaternion p2Rot = Quaternion.LookRotation(arenaTransform.right, arenaTransform.up);
 
+        Debug.Log($"Spawning players at {p1Pos} and {p2Pos} with rotations {p1Rot} and {p2Rot}");
+
         SpawnPlayer(currentState.players[0], p1Pos, p1Rot);
         SpawnPlayer(currentState.players[1], p2Pos, p2Rot);
     }
@@ -78,6 +61,7 @@ public class GameController : MonoBehaviour
     {
         var prefab = GetPlayerPrefab(player.avatar);
         if (prefab == null) return;
+        Debug.Log($"Spawning player {player.username} with avatar {player.avatar}");
 
         GameObject playerObj = Instantiate(prefab, position, rotation);
         playerObj.transform.SetParent(arena.transform);
@@ -92,6 +76,41 @@ public class GameController : MonoBehaviour
         );
 
         players.Add(player.id, playerController);
+    }
+
+    private void ProcessGameState()
+    {
+        //HandleGameStateChange();
+        //HandlePlayerStateChanges();
+    }
+
+    private void HandleGameStateChange()
+    {
+        if (currentState.gameStatus == "finished")
+        {
+            // END SCREEN
+        }
+    }
+
+    private void HandlePlayerStateChanges(PlayerState player, PlayerController playerController)
+    {
+        playerController.Highlight(player.id == currentState.currentTurnPlayerId);
+
+        if (player.state == "attacking" && !string.IsNullOrEmpty(player.attackType))
+        {
+            playerController.Attack(player.attackType);
+            string targetId = currentState.players.FirstOrDefault(p => p.id != player.id)?.id;
+            if (!string.IsNullOrEmpty(targetId) && players.TryGetValue(targetId, out var targetPlayer))
+                targetPlayer.TakeDamage(player.attackDamage);
+            return;
+        }
+
+        if (player.state == "winner")
+            playerController.PlayVictoryAnimation();
+        else if (player.state == "dead")
+            playerController.PlayDefeatAnimation();
+        else
+            playerController.PlayIdleAnimation();
     }
 
     /*private void CheckGameEnd(GameStateMessage newState)
@@ -133,27 +152,6 @@ public class GameController : MonoBehaviour
                 player.PlayIdleAnimation();
     }*/
 
-    private void HandlePlayerStateChange(PlayerState player, PlayerController playerController)
-    {
-        playerController.Highlight(player.id == currentState.currentTurnPlayerId);
-
-        if (player.state == "attacking" && !string.IsNullOrEmpty(player.attackType))
-        {
-            playerController.Attack(player.attackType);
-            string targetId = currentState.players.FirstOrDefault(p => p.id != player.id)?.id;
-            if (!string.IsNullOrEmpty(targetId) && players.TryGetValue(targetId, out var targetPlayer))
-                targetPlayer.TakeDamage(player.attackDamage);
-            return;
-        }
-        
-        if (player.state == "winner")
-            playerController.PlayVictoryAnimation();
-        else if (player.state == "dead")
-            playerController.PlayDefeatAnimation();
-        else
-            playerController.PlayIdleAnimation();
-    }
-
     private GameObject GetPlayerPrefab(string modelName)
     {
         var avatars = Resources.LoadAll<GameObject>($"Avatars");
@@ -162,13 +160,14 @@ public class GameController : MonoBehaviour
                 return prefab;
         return null;
     }
+}
 
-    private GameStateMessage GetCurrentState()
-    {
-        TextAsset jsonFile = Resources.Load<TextAsset>(fileName);
-        if (jsonFile == null) return null;
-        return JsonUtility.FromJson<GameStateMessage>(jsonFile.text);
-    }
+[Serializable]
+public class GameState
+{
+    public string gameStatus;
+    public string currentTurnPlayerId;
+    public PlayerState[] players;
 }
 
 [Serializable]
@@ -181,12 +180,4 @@ public class PlayerState
     public string state;
     public string attackType = "";
     public int attackDamage = 0;
-}
-
-[Serializable]
-public class GameStateMessage
-{
-    public PlayerState[] players;
-    public string gameState;
-    public string currentTurnPlayerId;
 }

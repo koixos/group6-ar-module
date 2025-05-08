@@ -1,0 +1,266 @@
+[
+    {
+        "gameStatus": "start",
+        "currentTurnPlayerId": "",
+        "players": [
+            {
+                "id": "p1",
+                "username": "WarriorQueen",
+                "avatar": "GreatSword",
+                "health": 85,
+                "state": "idle",
+                "attackType": "",
+                "attackDamage": 0
+            },
+            {
+                "id": "p2",
+                "username": "Voldemort",
+                "avatar": "Demon",
+                "health": 102,
+                "state": "idle",
+                "attackType": "",
+                "attackDamage": 0
+            }
+        ]
+    },
+    {
+        "gameStatus": "ongoing",
+        "currentTurnPlayerId": "p1",
+        "players": [
+            {
+                "id": "p1",
+                "username": "WarriorQueen",
+                "avatar": "GreatSword",
+                "health": 85,
+                "state": "attack",
+                "attackType": "fireball",
+                "attackDamage": 15
+            },
+            {
+                "id": "p2",
+                "username": "Voldemort",
+                "avatar": "Demon",
+                "health": 102,
+                "state": "idle",
+                "attackType": "",
+                "attackDamage": 0
+            }
+        ]
+    },
+    {
+        "gameStatus": "ongoing",
+        "currentTurnPlayerId": "p2",
+        "players": [
+            {
+                "id": "p1",
+                "username": "WarriorQueen",
+                "avatar": "GreatSword",
+                "health": 85,
+                "state": "idle",
+                "attackType": "",
+                "attackDamage": 0
+            },
+            {
+                "id": "p2",
+                "username": "Voldemort",
+                "avatar": "Demon",
+                "health": 87,
+                "state": "attack",
+                "attackType": "lightening",
+                "attackDamage": 25
+            }
+        ]
+    },
+    {
+        "gameStatus": "ongoing",
+        "currentTurnPlayerId": "p1",
+        "players": [
+            {
+                "id": "p1",
+                "username": "WarriorQueen",
+                "avatar": "GreatSword",
+                "health": 60,
+                "state": "attack",
+                "attackType": "lightening",
+                "attackDamage": 25
+            },
+            {
+                "id": "p2",
+                "username": "Voldemort",
+                "avatar": "Demon",
+                "health": 87,
+                "state": "idle",
+                "attackType": "",
+                "attackDamage": 0
+            }
+        ]
+    },
+    {
+        "gameStatus": "ongoing",
+        "currentTurnPlayerId": "p2",
+        "players": [
+            {
+                "id": "p1",
+                "username": "WarriorQueen",
+                "avatar": "GreatSword",
+                "health": 60,
+                "state": "idle",
+                "attackType": "",
+                "attackDamage": 0
+            },
+            {
+                "id": "p2",
+                "username": "Voldemort",
+                "avatar": "Demon",
+                "health": 62,
+                "state": "attack",
+                "attackType": "fireball",
+                "attackDamage": 15
+            }
+        ]
+    },
+    {
+        "gameStatus": "ongoing",
+        "currentTurnPlayerId": "p1",
+        "players": [
+            {
+                "id": "p1",
+                "username": "WarriorQueen",
+                "avatar": "GreatSword",
+                "health": 45,
+                "state": "attack",
+                "attackType": "lightening",
+                "attackDamage": 25
+            },
+            {
+                "id": "p2",
+                "username": "Voldemort",
+                "avatar": "Demon",
+                "health": 62,
+                "state": "idle",
+                "attackType": "",
+                "attackDamage": 0
+            }
+        ]
+    },
+    {
+        "gameStatus": "ongoing",
+        "currentTurnPlayerId": "p2",
+        "players": [
+            {
+                "id": "p1",
+                "username": "WarriorQueen",
+                "avatar": "GreatSword",
+                "health": 45,
+                "state": "idle",
+                "attackType": "",
+                "attackDamage": 0
+            },
+            {
+                "id": "p2",
+                "username": "Voldemort",
+                "avatar": "Demon",
+                "health": 37,
+                "state": "attack",
+                "attackType": "fireball",
+                "attackDamage": 15
+            }
+        ]
+    },
+    {
+        "gameStatus": "ongoing",
+        "currentTurnPlayerId": "p1",
+        "players": [
+            {
+                "id": "p1",
+                "username": "WarriorQueen",
+                "avatar": "GreatSword",
+                "health": 30,
+                "state": "attack",
+                "attackType": "lightening",
+                "attackDamage": 25
+            },
+            {
+                "id": "p2",
+                "username": "Voldemort",
+                "avatar": "Demon",
+                "health": 37,
+                "state": "idle",
+                "attackType": "",
+                "attackDamage": 0
+            }
+        ]
+    },
+    {
+        "gameStatus": "ongoing",
+        "currentTurnPlayerId": "p2",
+        "players": [
+            {
+                "id": "p1",
+                "username": "WarriorQueen",
+                "avatar": "GreatSword",
+                "health": 30,
+                "state": "idle",
+                "attackType": "",
+                "attackDamage": 0
+            },
+            {
+                "id": "p2",
+                "username": "Voldemort",
+                "avatar": "Demon",
+                "health": 12,
+                "state": "attack",
+                "attackType": "lightening",
+                "attackDamage": 25
+            }
+        ]
+    },
+    {
+        "gameStatus": "ongoing",
+        "currentTurnPlayerId": "p1",
+        "players": [
+            {
+                "id": "p1",
+                "username": "WarriorQueen",
+                "avatar": "GreatSword",
+                "health": 5,
+                "state": "attack",
+                "attackType": "fireball",
+                "attackDamage": 15
+            },
+            {
+                "id": "p2",
+                "username": "Voldemort",
+                "avatar": "Demon",
+                "health": 12,
+                "state": "idle",
+                "attackType": "",
+                "attackDamage": 0
+            }
+        ]
+    },
+    {
+        "gameStatus": "finished",
+        "currentTurnPlayerId": "p2",
+        "players": [
+            {
+                "id": "p1",
+                "username": "WarriorQueen",
+                "avatar": "GreatSword",
+                "health": 5,
+                "state": "idle",
+                "attackType": "",
+                "attackDamage": 0
+            },
+            {
+                "id": "p2",
+                "username": "Voldemort",
+                "avatar": "Demon",
+                "health": -3,
+                "state": "attack",
+                "attackType": "lightening",
+                "attackDamage": 25
+            }
+        ]
+    }
+]

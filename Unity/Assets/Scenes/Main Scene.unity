@@ -529,7 +529,6 @@ GameObject:
   - component: {fileID: 619326956}
   - component: {fileID: 619326955}
   - component: {fileID: 619326954}
-  - component: {fileID: 619326953}
   m_Layer: 5
   m_Name: Canvas
   m_TagString: Untagged
@@ -537,23 +536,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &619326953
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 619326952}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 840ca32964b25fd46a8f4f6143404922, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  wsManager: {fileID: 0}
-  pingInterval: 5
-  reconnectDelay: 3
-  maxQeueuedMsgs: 60
-  processingDelay: 0.016
 --- !u!114 &619326954
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1888,8 +1870,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   attackPrefabs: []
   playerPrefabs:
-  - {fileID: 4959202091283174000, guid: 5b6bfcf54628afa4098bff1ba1789854, type: 3}
-  - {fileID: 8271767259986621542, guid: d9a52e491b378624f83c8d2f705afe1f, type: 3}
+  - {fileID: 4156858594606167482, guid: 623add838c7bf9d43987d48823ee5c52, type: 3}
+  - {fileID: 70215640057685118, guid: 3542a0e2c5e251d408d54bebdf6252e1, type: 3}
+  - {fileID: 4858629840082883139, guid: 7b340a2fd09f5294cbfefdc284b6b222, type: 3}
+  - {fileID: 4000249383414984898, guid: 7b60242996a79b0449d9874aa816e4e4, type: 3}
 --- !u!4 &1987661511
 Transform:
   m_ObjectHideFlags: 0
@@ -1990,9 +1974,9 @@ SceneRoots:
   - {fileID: 1775594511}
   - {fileID: 989775843}
   - {fileID: 705507995}
+  - {fileID: 1575595199}
   - {fileID: 304651681}
   - {fileID: 968190168}
   - {fileID: 619326957}
   - {fileID: 1877891088}
-  - {fileID: 1575595199}
   - {fileID: 1987661511}

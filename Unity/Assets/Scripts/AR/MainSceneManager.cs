@@ -150,53 +150,6 @@ public class MainSceneManager : MonoBehaviour
         return true;
     }
 
-    public void SendTestGameState()
-    {
-        if (!hasConnectedToServer || wsManager == null)
-            return;
-
-        string testGameState = @"{
-            ""type"": ""game_state"",
-            ""players"": [
-                {
-                    ""id"": ""player1"",
-                    ""name"": ""Player 1"",
-                    ""avatar"": ""warrior"",
-                    ""health"": 100,
-                    ""pos"": {""x"": -0.5, ""y"": 0, ""z"": 0}
-                },
-                {
-                    ""id"": ""player2"",
-                    ""name"": ""Player 2"",
-                    ""avatar"": ""mage"",
-                    ""health"": 100,
-                    ""pos"": {""x"": 0.5, ""y"": 0, ""z"": 0}
-                }
-            ],
-            ""currTurn"": ""player1"",
-            ""turnCount"": 1
-        }";
-
-        WebSocketManager.OnMsgReceived_Native(testGameState);
-    }
-
-    public void SendTestPlayerAction()
-    {
-        if (!hasConnectedToServer || wsManager == null)
-            return;
-
-        string testPlayerAction = @"{
-            ""type"": ""player_action"",
-            ""playerId"": ""player1"",
-            ""targetId"": ""player2"",
-            ""attackType"": ""attack"",
-            ""attackName"": ""Attack1"",
-            ""damage"": 20
-        }";
-
-        WebSocketManager.OnMsgReceived_Native(testPlayerAction);
-    }
-
     /*private IEnumerator InitializeConnection()
     {
         Debug.Log("Connecting to WebSocket server...");
