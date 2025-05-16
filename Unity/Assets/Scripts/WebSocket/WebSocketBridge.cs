@@ -5,6 +5,8 @@ using UnityEngine;
 
 public class WebSocketBridge : MonoBehaviour
 {
+    [SerializeField] private GameObject obj;
+
     private const string PLUGIN_NAME = "UnityWebSocketPlugin";
     private static readonly ConcurrentQueue<string> messageQueue = new();
 
@@ -28,15 +30,8 @@ public class WebSocketBridge : MonoBehaviour
     {
         try
         {
-            if (msgPtr == IntPtr.Zero)
-            {
-                Debug.LogError("[Native Callback] Received null message pointer.");
-                return;
-            }
-
+            if (msgPtr == IntPtr.Zero) return;
             string msg = Marshal.PtrToStringAnsi(msgPtr);
-            Debug.Log("[Native Callback] Received: " + msg);
-
             messageQueue.Enqueue(msg);
         }
         catch (Exception e)
@@ -47,6 +42,12 @@ public class WebSocketBridge : MonoBehaviour
 
     void Start()
     {
+        obj = GameObject.Find("GameController");
+        if (obj == null)
+        {
+            Debug.LogError("GameController not found.");
+            return;
+        }
         InitializeWebSocket("ws://localhost:8080", OnMessageReceived);
     }
 
@@ -55,14 +56,6 @@ public class WebSocketBridge : MonoBehaviour
         while (messageQueue.TryDequeue(out var msg))
         {
             Debug.Log("[Main Thread] Processing message: " + msg);
-
-            var obj = GameObject.Find("GameController");
-            if (obj == null)
-            {
-                Debug.LogError("GameController not found.");
-                return;
-            }
-
             if (obj.TryGetComponent<GameController>(out var controller))
                 controller.OnWebSocketMsg(msg);
             else

@@ -28,9 +28,6 @@ public class MainSceneManager : MonoBehaviour
 
         if (gameController == null)
             gameController = FindObjectOfType<GameController>();
-        
-        if (gameController != null)
-            gameController.gameObject.SetActive(false);
 
         ShowJoinRoomPanel(true);
         OnJoinRoomButtonClicked();
@@ -60,10 +57,7 @@ public class MainSceneManager : MonoBehaviour
         arenaPlaced = true;
 
         if (gameController != null)
-        {
-            gameController.gameObject.SetActive(true);
             gameController.SetArena(gameArena);
-        }
     }
 
     public void OnJoinRoomButtonClicked()

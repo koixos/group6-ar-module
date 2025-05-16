@@ -4,36 +4,89 @@ using System.Linq;
 using UnityEngine;
 
 public class GameController : MonoBehaviour
-{  
+{
+    private enum InitState
+    {
+        WaitingForArena,
+        WaitingForServerData,
+        ReadyToSpawn,
+        GameActive
+    }
+
     [SerializeField] private GameObject[] attackPrefabs;
     [SerializeField] private GameObject[] playerPrefabs;
+
     private readonly Dictionary<string, PlayerController> players = new();
-    private GameState currentState;
+    private InitState currentState = InitState.WaitingForArena;
+    private GameState currentGameState;
     private GameObject arena;
-    private int turnCounter = 0;
+    private string lastReceivedJson = "";
+    private float dataTimeoutTimer = 0f;
+    private const float timeoutThreshold = 10f;
+    private bool isPlayerDataReady = false;
+    private bool isPlayersSpawned = false;
+
+    void Update()
+    {
+        switch (currentState)
+        {
+            case InitState.WaitingForArena:
+                if (arena != null)
+                    currentState = InitState.WaitingForServerData;
+                break;
+            case InitState.WaitingForServerData:
+                dataTimeoutTimer += Time.deltaTime;
+                if (isPlayerDataReady && arena != null)
+                {
+                    dataTimeoutTimer = 0f;
+                    if (!isPlayersSpawned)
+                        currentState = InitState.ReadyToSpawn;
+                    else
+                        currentState = InitState.GameActive;
+                }
+                else if (dataTimeoutTimer > timeoutThreshold)
+                {
+                    Debug.LogWarning("Timeout waiting for server data.");
+                    return;
+                    // Handle timeout (e.g., show error message, retry, etc.)
+                }
+                break;
+            case InitState.ReadyToSpawn:
+                if (SpawnPlayers())
+                {
+                    isPlayersSpawned = true;
+                    currentState = InitState.GameActive;
+                }
+                break;
+            case InitState.GameActive:
+                ProcessGameState();
+                break;
+        }
+    }
 
     public void OnWebSocketMsg(string json)
     {
-        Debug.Log($"WebSocket message: {json}");
+        if (json == lastReceivedJson) return;
+        lastReceivedJson = json;
+
         GameState state = JsonUtility.FromJson<GameState>(json);
         if (state == null || state.players == null || state.players.Length == 0) return;
-        currentState = state;
-        ++turnCounter;
-
-        if (turnCounter == 1)
-            SpawnPlayers();
-        
-        ProcessGameState();
+        isPlayerDataReady = true;
+        currentGameState = state;
     }
 
     public void SetArena(GameObject arena)
     {
         if (this.arena != null) return;
         this.arena = arena;
+        if (currentState == InitState.WaitingForArena && isPlayerDataReady)
+            currentState = InitState.WaitingForServerData;
     }
 
-    private void SpawnPlayers()
+    private bool SpawnPlayers()
     {
+        if (arena == null) return false;
+
         Transform arenaTransform = arena.transform;
         Vector3 arenaRight = arenaTransform.right;
 
@@ -51,10 +104,10 @@ public class GameController : MonoBehaviour
         Quaternion p1Rot = Quaternion.LookRotation(-arenaTransform.right, arenaTransform.up);
         Quaternion p2Rot = Quaternion.LookRotation(arenaTransform.right, arenaTransform.up);
 
-        Debug.Log($"Spawning players at {p1Pos} and {p2Pos} with rotations {p1Rot} and {p2Rot}");
+        SpawnPlayer(currentGameState.players[0], p1Pos, p1Rot);
+        SpawnPlayer(currentGameState.players[1], p2Pos, p2Rot);
 
-        SpawnPlayer(currentState.players[0], p1Pos, p1Rot);
-        SpawnPlayer(currentState.players[1], p2Pos, p2Rot);
+        return true;
     }
 
     private void SpawnPlayer(PlayerState player, Vector3 position, Quaternion rotation)
@@ -67,7 +120,9 @@ public class GameController : MonoBehaviour
         playerObj.transform.SetParent(arena.transform);
         playerObj.transform.localScale = new Vector3(1f, 1f, 1f);
 
-        PlayerController playerController = playerObj.AddComponent<PlayerController>();
+        if (!playerObj.TryGetComponent<PlayerController>(out var playerController))
+            playerController = playerObj.AddComponent<PlayerController>();
+
         playerController.Initialize(
             player.id,
             player.username,
@@ -80,34 +135,40 @@ public class GameController : MonoBehaviour
 
     private void ProcessGameState()
     {
-        //HandleGameStateChange();
-        //HandlePlayerStateChanges();
-    }
-
-    private void HandleGameStateChange()
-    {
-        if (currentState.gameStatus == "finished")
+        if (currentGameState.gameStatus == "finished")
         {
             // END SCREEN
         }
+        else
+        {
+            foreach (var player in currentGameState.players)
+            {
+                if (players.TryGetValue(player.id, out var playerController))
+                {
+                    //Debug.Log(player.avatar);
+                    HandlePlayerStateChange(player, playerController);
+                    //playerController.SetHealth(player.health);
+                }
+            }
+        }
     }
 
-    private void HandlePlayerStateChanges(PlayerState player, PlayerController playerController)
+    private void HandlePlayerStateChange(PlayerState player, PlayerController playerController)
     {
-        playerController.Highlight(player.id == currentState.currentTurnPlayerId);
+        //playerController.Highlight(player.id == currentState.currentTurnPlayerId);
 
-        if (player.state == "attacking" && !string.IsNullOrEmpty(player.attackType))
+        if (player.state == "attack" && !string.IsNullOrEmpty(player.attackType))
         {
             playerController.Attack(player.attackType);
-            string targetId = currentState.players.FirstOrDefault(p => p.id != player.id)?.id;
+            string targetId = currentGameState.players.FirstOrDefault(p => p.id != player.id)?.id;
             if (!string.IsNullOrEmpty(targetId) && players.TryGetValue(targetId, out var targetPlayer))
                 targetPlayer.TakeDamage(player.attackDamage);
             return;
         }
 
-        if (player.state == "winner")
+        if (player.state == "victory")
             playerController.PlayVictoryAnimation();
-        else if (player.state == "dead")
+        else if (player.state == "defeat")
             playerController.PlayDefeatAnimation();
         else
             playerController.PlayIdleAnimation();

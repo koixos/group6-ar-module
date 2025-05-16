@@ -18,6 +18,11 @@ public class PlayerController : MonoBehaviour
     private Animator animator;
     private GameObject currentAttackEffect;
 
+    void Awake()
+    {
+        animator = GetComponent<Animator>();
+    }
+
     public void Initialize(string id, string username, string modelName, int health)
     {
         this.id = id;
@@ -62,9 +67,11 @@ public class PlayerController : MonoBehaviour
         if (animator != null)
         {
             animator.ResetTrigger("idle");
-            animator.ResetTrigger("hit");
+            animator.ResetTrigger("hurt");
+            animator.ResetTrigger("victory");
+            animator.ResetTrigger("defeat");
             animator.SetTrigger("attack");
-            ShowAttackAnimation(attackName);
+            //ShowAttackAnimation(attackName);
         }
     }
 
@@ -78,14 +85,32 @@ public class PlayerController : MonoBehaviour
 
         PlayHitAnimation();
         SetHealth(health);
-        ShowDamageNumber(damage);
+        //ShowDamageNumber(damage);
     }
 
     public void PlayIdleAnimation()
     {
         if (animator != null)
+        {
+            animator.ResetTrigger("attack");
+            animator.ResetTrigger("hurt");
+            animator.ResetTrigger("victory");
+            animator.ResetTrigger("defeat");
             animator.SetTrigger("idle");
-    }    
+        }
+    }
+
+    private void PlayHitAnimation()
+    {
+        if (animator != null)
+        {
+            animator.ResetTrigger("idle");
+            animator.ResetTrigger("attack");
+            animator.ResetTrigger("victory");
+            animator.ResetTrigger("defeat");
+            animator.SetTrigger("hurt");
+        }
+    }
 
     public void PlayDefeatAnimation()
     {
@@ -93,7 +118,8 @@ public class PlayerController : MonoBehaviour
         {
             animator.ResetTrigger("idle");
             animator.ResetTrigger("attack");
-            animator.ResetTrigger("hit");
+            animator.ResetTrigger("hurt");
+            animator.ResetTrigger("victory");
             animator.SetTrigger("defeat");
         }
     }
@@ -104,18 +130,9 @@ public class PlayerController : MonoBehaviour
         {
             animator.ResetTrigger("idle");
             animator.ResetTrigger("attack");
-            animator.ResetTrigger("hit");
+            animator.ResetTrigger("hurt");
+            animator.ResetTrigger("defeat");
             animator.SetTrigger("victory");
-        }
-    }
-
-    private void PlayHitAnimation()
-    {
-        if (animator != null)
-        {
-            animator.ResetTrigger("idle");
-            animator.ResetTrigger("attack");
-            animator.SetTrigger("hit");
         }
     }
 
@@ -138,12 +155,5 @@ public class PlayerController : MonoBehaviour
     {
         // Implement damage number display logic here
         Debug.Log($"Damage: {damage}");
-    }
-
-    private void SetAvatar(string modelName)
-    {
-        Transform existingAvatar = transform.Find("Avatar");
-        if (existingAvatar != null)
-            Destroy(existingAvatar.gameObject);
     }
 }

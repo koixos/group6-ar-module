@@ -7,10 +7,15 @@ clients = set()
 
 
 async def send_states(data_queue):
+    last_sent = None
+
     for data in data_queue:
         await asyncio.get_event_loop().run_in_executor(None, input)
+        if data == last_sent:
+            continue
         for ws in clients:
             await ws.send(json.dumps(data))
+        last_sent = data
         print(data["gameStatus"])
         await asyncio.sleep(2)
 
