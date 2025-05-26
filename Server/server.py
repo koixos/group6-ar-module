@@ -1,49 +1,24 @@
-import asyncio
+from flask import Flask, jsonify
 import json
-import sys
-import websockets
 
-clients = set()
+app = Flask(__name__)
 
+with open("game_state_data.json", "r", encoding="utf-8") as file:
+    game_state_data = json.load(file)
 
-async def send_states(data_queue):
-    last_sent = None
-
-    for data in data_queue:
-        await asyncio.get_event_loop().run_in_executor(None, input)
-        if data == last_sent:
-            continue
-        for ws in clients:
-            await ws.send(json.dumps(data))
-        last_sent = data
-        print(data["gameStatus"])
-        await asyncio.sleep(2)
+currInd = 0
 
 
-async def echo(websocket):
-    clients.add(websocket)
+@app.route("/api/ar/681c8ee256a702d8c1500b40", methods=["GET"])
+def get_game_state():
+    global currInd
+    if currInd >= len(game_state_data):
+        return jsonify({"gameStatus": "finished", "players": []})
 
-    try:
-        async for msg in websocket:
-            print(msg)
-    finally:
-        clients.remove(websocket)
-
-
-async def main():
-    with open("game_state_data.json", "r", encoding="utf-8") as f:
-        data = json.load(f)
-
-    server = await websockets.serve(echo, "0.0.0.0", 8080)
-    print("WebSocket server running...")
-
-    await send_states(data)
-
-    await server.wait_closed()
+    response = game_state_data[currInd]
+    currInd += 1
+    return jsonify(response)
 
 
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        sys.exit(0)
+    app.run(host='0.0.0.0', port=3001)

@@ -1,17 +1,16 @@
 using System.Collections.Generic;
-using TMPro;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 
 public class MainSceneManager : MonoBehaviour
 {
-    [SerializeField] private GameObject gameArenaPrefab;
-    [SerializeField] private ARRaycastManager raycastManager;
-    [SerializeField] private Camera Camera;
     [SerializeField] private GameController gameController;
-    [SerializeField] private GameObject joinRoomPanel;
-    [SerializeField] private GameObject statusText;
+    [SerializeField] private ARRaycastManager raycastManager;
+    [SerializeField] private Camera cam;
+    [SerializeField] private GameObject arenaPrefab;
+    //[SerializeField] private GameObject joinRoomPanel;
+    //[SerializeField] private GameObject statusText;
 
     private readonly List<ARRaycastHit> hits = new();
     private GameObject gameArena = null;
@@ -20,47 +19,51 @@ public class MainSceneManager : MonoBehaviour
 
     void Start()
     {
-        if (raycastManager == null)
-            raycastManager = FindObjectOfType<ARRaycastManager>();
+        if (gameController == null) gameController = FindObjectOfType<GameController>();
+        if (raycastManager == null) raycastManager = FindObjectOfType<ARRaycastManager>();
+        if (cam == null) cam = FindObjectOfType<Camera>();
 
-        if (Camera == null)
-            Camera = FindObjectOfType<Camera>();
-
-        if (gameController == null)
-            gameController = FindObjectOfType<GameController>();
-
-        ShowJoinRoomPanel(true);
-        OnJoinRoomButtonClicked();
+        isGameActive = true;
+        //ShowJoinRoomPanel(true);
+        //OnJoinRoomButtonClicked();
     }
 
     void Update()
     {
-        if (!arenaPlaced && isGameActive && Input.touchCount > 0 &&Input.GetTouch(0).phase == TouchPhase.Began)
+        if (!arenaPlaced && isGameActive && Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
             PlaceArena(Input.GetTouch(0).position);
     }
+
+    /*public void OnWebSocketMsg(string json)
+    {
+        if (string.IsNullOrEmpty(json)) return;
+        if (gameController == null) return;
+        gameController.ProcessGameState(json);
+    }*/
 
     private void PlaceArena(Vector2 screenPos)
     {
         if (raycastManager.Raycast(screenPos, hits, TrackableType.PlaneWithinPolygon))
         {
             var pose = hits[0].pose;
-            gameArena = Instantiate(gameArenaPrefab, pose.position, pose.rotation);
+            gameArena = Instantiate(arenaPrefab, pose.position, pose.rotation);
         }
         else
         {
-            Vector3 pos = Camera.transform.position + Camera.transform.forward * 2f;
+            Vector3 pos = cam.transform.position + cam.transform.forward * 2f;
             pos.y -= 1.5f;
-            Quaternion rot = Quaternion.Euler(45f, Camera.transform.eulerAngles.y, 0);
-            gameArena = Instantiate(gameArenaPrefab, pos, rot);
+            Quaternion rot = Quaternion.Euler(45f, cam.transform.eulerAngles.y, 0);
+            gameArena = Instantiate(arenaPrefab, pos, rot);
         }
 
-        arenaPlaced = true;
-
         if (gameController != null)
+        {
             gameController.SetArena(gameArena);
+            arenaPlaced = true;
+        }
     }
 
-    public void OnJoinRoomButtonClicked()
+    /*public void OnJoinRoomButtonClicked()
     {
         isGameActive = true;
         ShowJoinRoomPanel(false);
@@ -72,7 +75,7 @@ public class MainSceneManager : MonoBehaviour
         ShowJoinRoomPanel(true);
         isGameActive = false;  
     }
-
+    
     private void OnConnectionStatusChanged(bool isConnected)
     {
         if (!isConnected && isGameActive)

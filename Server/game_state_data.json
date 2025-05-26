@@ -8,6 +8,7 @@
                 "username": "WarriorQueen",
                 "avatar": "GreatSword",
                 "health": 85,
+                "maxhealth": 115,
                 "state": "idle",
                 "attackType": "",
                 "attackDamage": 0
@@ -15,8 +16,9 @@
             {
                 "id": "p2",
                 "username": "Voldemort",
-                "avatar": "Demon",
+                "avatar": "Archer",
                 "health": 102,
+                "maxhealth": 115,
                 "state": "idle",
                 "attackType": "",
                 "attackDamage": 0
@@ -32,6 +34,7 @@
                 "username": "WarriorQueen",
                 "avatar": "GreatSword",
                 "health": 85,
+                "maxhealth": 115,
                 "state": "attack",
                 "attackType": "fireball",
                 "attackDamage": 15
@@ -39,9 +42,10 @@
             {
                 "id": "p2",
                 "username": "Voldemort",
-                "avatar": "Demon",
+                "avatar": "Archer",
                 "health": 102,
-                "state": "idle",
+                "maxhealth": 115,
+                "state": "hurt",
                 "attackType": "",
                 "attackDamage": 0
             }
@@ -56,15 +60,17 @@
                 "username": "WarriorQueen",
                 "avatar": "GreatSword",
                 "health": 85,
-                "state": "idle",
+                "maxhealth": 115,
+                "state": "hurt",
                 "attackType": "",
                 "attackDamage": 0
             },
             {
                 "id": "p2",
                 "username": "Voldemort",
-                "avatar": "Demon",
+                "avatar": "Archer",
                 "health": 87,
+                "maxhealth": 115,
                 "state": "attack",
                 "attackType": "lightening",
                 "attackDamage": 25
@@ -80,6 +86,7 @@
                 "username": "WarriorQueen",
                 "avatar": "GreatSword",
                 "health": 60,
+                "maxhealth": 115,
                 "state": "attack",
                 "attackType": "lightening",
                 "attackDamage": 25
@@ -87,9 +94,10 @@
             {
                 "id": "p2",
                 "username": "Voldemort",
-                "avatar": "Demon",
+                "avatar": "Archer",
                 "health": 87,
-                "state": "idle",
+                "maxhealth": 115,
+                "state": "hurt",
                 "attackType": "",
                 "attackDamage": 0
             }
@@ -104,15 +112,17 @@
                 "username": "WarriorQueen",
                 "avatar": "GreatSword",
                 "health": 60,
-                "state": "idle",
+                "maxhealth": 115,
+                "state": "hurt",
                 "attackType": "",
                 "attackDamage": 0
             },
             {
                 "id": "p2",
                 "username": "Voldemort",
-                "avatar": "Demon",
+                "avatar": "Archer",
                 "health": 62,
+                "maxhealth": 115,
                 "state": "attack",
                 "attackType": "fireball",
                 "attackDamage": 15
@@ -128,6 +138,7 @@
                 "username": "WarriorQueen",
                 "avatar": "GreatSword",
                 "health": 45,
+                "maxhealth": 115,
                 "state": "attack",
                 "attackType": "lightening",
                 "attackDamage": 25
@@ -135,9 +146,10 @@
             {
                 "id": "p2",
                 "username": "Voldemort",
-                "avatar": "Demon",
+                "avatar": "Archer",
                 "health": 62,
-                "state": "idle",
+                "maxhealth": 115,
+                "state": "hurt",
                 "attackType": "",
                 "attackDamage": 0
             }
@@ -152,15 +164,17 @@
                 "username": "WarriorQueen",
                 "avatar": "GreatSword",
                 "health": 45,
-                "state": "idle",
+                "maxhealth": 115,
+                "state": "hurt",
                 "attackType": "",
                 "attackDamage": 0
             },
             {
                 "id": "p2",
                 "username": "Voldemort",
-                "avatar": "Demon",
+                "avatar": "Archer",
                 "health": 37,
+                "maxhealth": 115,
                 "state": "attack",
                 "attackType": "fireball",
                 "attackDamage": 15
@@ -176,6 +190,7 @@
                 "username": "WarriorQueen",
                 "avatar": "GreatSword",
                 "health": 30,
+                "maxhealth": 115,
                 "state": "attack",
                 "attackType": "lightening",
                 "attackDamage": 25
@@ -183,9 +198,10 @@
             {
                 "id": "p2",
                 "username": "Voldemort",
-                "avatar": "Demon",
+                "avatar": "Archer",
                 "health": 37,
-                "state": "idle",
+                "maxhealth": 115,
+                "state": "hurt",
                 "attackType": "",
                 "attackDamage": 0
             }
@@ -200,15 +216,17 @@
                 "username": "WarriorQueen",
                 "avatar": "GreatSword",
                 "health": 30,
-                "state": "idle",
+                "maxhealth": 115,
+                "state": "hurt",
                 "attackType": "",
                 "attackDamage": 0
             },
             {
                 "id": "p2",
                 "username": "Voldemort",
-                "avatar": "Demon",
+                "avatar": "Archer",
                 "health": 12,
+                "maxhealth": 115,
                 "state": "attack",
                 "attackType": "lightening",
                 "attackDamage": 25
@@ -224,6 +242,7 @@
                 "username": "WarriorQueen",
                 "avatar": "GreatSword",
                 "health": 5,
+                "maxhealth": 115,
                 "state": "attack",
                 "attackType": "fireball",
                 "attackDamage": 15
@@ -231,9 +250,10 @@
             {
                 "id": "p2",
                 "username": "Voldemort",
-                "avatar": "Demon",
+                "avatar": "Archer",
                 "health": 12,
-                "state": "idle",
+                "maxhealth": 115,
+                "state": "hurt",
                 "attackType": "",
                 "attackDamage": 0
             }
@@ -248,15 +268,17 @@
                 "username": "WarriorQueen",
                 "avatar": "GreatSword",
                 "health": 5,
-                "state": "idle",
+                "maxhealth": 115,
+                "state": "hurt",
                 "attackType": "",
                 "attackDamage": 0
             },
             {
                 "id": "p2",
                 "username": "Voldemort",
-                "avatar": "Demon",
+                "avatar": "Archer",
                 "health": -3,
+                "maxhealth": 115,
                 "state": "attack",
                 "attackType": "lightening",
                 "attackDamage": 25

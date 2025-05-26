@@ -6,154 +6,114 @@ public class PlayerController : MonoBehaviour
     [Header("UI")]
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private GameObject healthBar;
-    [SerializeField] private GameObject highlight;
 
-    [Header("Model")]
-    public string id;
-    public string username;
-    public string avatar;
-    public int health;
-
-    private int maxHealth;
     private Animator animator;
     private GameObject currentAttackEffect;
+    private string id;
+    private string username;
+    private string avatar;
+    private int health;
+    private int maxHealth;
+    private string currAnimTrig = "";
 
     void Awake()
     {
         animator = GetComponent<Animator>();
+        if (nameText == null)
+            nameText = GetComponentInChildren<TextMeshProUGUI>();
+        if (healthBar == null)
+            healthBar = transform.Find("HealthBar")?.gameObject;
+        //if (highlight == null)
+            //highlight = transform.Find("Highlight")?.gameObject;
     }
 
-    public void Initialize(string id, string username, string modelName, int health)
+    void LateUpdate()
+    {
+        if (nameText != null)
+            nameText.transform.rotation = Quaternion.LookRotation(nameText.transform.position - Camera.main.transform.position);
+        if (healthBar != null)
+            healthBar.transform.rotation = Quaternion.LookRotation(healthBar.transform.position - Camera.main.transform.position);
+    }
+
+    public void Initialize(string id, string username, string modelName, int health, int maxhealth)
     {
         this.id = id;
         this.username = username;
         this.avatar = modelName;
         this.health = health;
-        this.maxHealth = health;
+        this.maxHealth = maxhealth;
         
-        if (nameText != null)
-            nameText.text = username;
-
+        if (nameText != null) nameText.text = username;
+        
         SetHealth(health);
-    }
-
-    public void SetHealth(int newHealth)
-    {
-        health = newHealth;
-        float healthPercentage = (float)health / maxHealth;
-        
-        if (healthBar != null)
-            healthBar.transform.localScale = new Vector3(healthPercentage, 1, 1);
-
-        if (healthBar != null)
-        {
-            if (healthPercentage > 0.5f)
-                healthBar.GetComponent<SpriteRenderer>().color = Color.green;
-            else if (healthPercentage > 0.2f)
-                healthBar.GetComponent<SpriteRenderer>().color = Color.yellow;
-            else
-                healthBar.GetComponent<SpriteRenderer>().color = Color.red;
-        }
-    }
-
-    public void Highlight(bool on)
-    {
-        if (highlight != null)
-            highlight.SetActive(on);
     }
 
     public void Attack(string attackName)
     {
-        if (animator != null)
-        {
-            animator.ResetTrigger("idle");
-            animator.ResetTrigger("hurt");
-            animator.ResetTrigger("victory");
-            animator.ResetTrigger("defeat");
-            animator.SetTrigger("attack");
-            //ShowAttackAnimation(attackName);
-        }
-    }
-
-    public void TakeDamage(int damage)
-    {
-        if (health <= 0) return;
-
-        health -= damage;
-        if (health < 0)
-            health = 0;
-
-        PlayHitAnimation();
-        SetHealth(health);
-        //ShowDamageNumber(damage);
-    }
-
-    public void PlayIdleAnimation()
-    {
-        if (animator != null)
-        {
-            animator.ResetTrigger("attack");
-            animator.ResetTrigger("hurt");
-            animator.ResetTrigger("victory");
-            animator.ResetTrigger("defeat");
-            animator.SetTrigger("idle");
-        }
-    }
-
-    private void PlayHitAnimation()
-    {
-        if (animator != null)
-        {
-            animator.ResetTrigger("idle");
-            animator.ResetTrigger("attack");
-            animator.ResetTrigger("victory");
-            animator.ResetTrigger("defeat");
-            animator.SetTrigger("hurt");
-        }
-    }
-
-    public void PlayDefeatAnimation()
-    {
-        if (animator != null)
-        {
-            animator.ResetTrigger("idle");
-            animator.ResetTrigger("attack");
-            animator.ResetTrigger("hurt");
-            animator.ResetTrigger("victory");
-            animator.SetTrigger("defeat");
-        }
-    }
-
-    public void PlayVictoryAnimation()
-    {
-        if (animator != null)
-        {
-            animator.ResetTrigger("idle");
-            animator.ResetTrigger("attack");
-            animator.ResetTrigger("hurt");
-            animator.ResetTrigger("defeat");
-            animator.SetTrigger("victory");
-        }
-    }
-
-    private void ShowAttackAnimation(string attackName)
-    {
-        if (currentAttackEffect != null)
-            Destroy(currentAttackEffect);
-
+        PlayAnimation("attack");
+        
+        /*if (currentAttackEffect != null) Destroy(currentAttackEffect);
         GameObject attackPrefab = Resources.Load<GameObject>($"Attacks/{attackName}");
-        if (attackPrefab != null)
-        {
-            Vector3 attackPosition = transform.position + transform.forward * 2f;
-            currentAttackEffect = Instantiate(attackPrefab, attackPosition, transform.rotation);
-            currentAttackEffect.transform.LookAt(transform.position - transform.forward * 10f);
-            Destroy(currentAttackEffect, 3f);
-        }
+        if (attackPrefab == null) return;
+        Vector3 attackPosition = transform.position + transform.forward * 2f;
+        currentAttackEffect = Instantiate(attackPrefab, attackPosition, transform.rotation);
+        //currentAttackEffect.transform.LookAt(transform.position - transform.forward * 10f);
+        Destroy(currentAttackEffect, 2f);*/
     }
 
-    private void ShowDamageNumber(int damage)
+    public void Hurt(int damage)
+    {
+        SetHealth(health-damage);
+        PlayAnimation("hurt");
+        //ShowDamageAmount(damage);
+    }
+
+    public void PlayIdleAnimation() => PlayAnimation("idle");
+
+    public void PlayDefeatAnimation() => PlayAnimation("defeat");
+
+    public void PlayVictoryAnimation() => PlayAnimation("victory");
+
+    private void PlayAnimation(string trigger)
+    {
+        if (animator == null) return;
+        if (currAnimTrig == trigger) return;
+
+        ResetAllTriggers();
+        animator.SetTrigger(trigger);
+        currAnimTrig = trigger;
+    }
+
+    private void ResetAllTriggers()
+    {
+        if (animator == null) return;
+        animator.ResetTrigger("idle");
+        animator.ResetTrigger("attack");
+        animator.ResetTrigger("hurt");
+        animator.ResetTrigger("victory");
+        animator.ResetTrigger("defeat");
+        currAnimTrig = "";
+    }
+
+    private void SetHealth(int newHealth)
+    {
+        health = Mathf.Clamp(newHealth, 0, maxHealth);
+
+        if (healthBar == null) return;
+
+        float percentage = (float)health / maxHealth;
+        if (!healthBar.TryGetComponent<SpriteRenderer>(out var sr)) return;
+
+        if (percentage > 0.5f) sr.color = Color.green;
+        else if (percentage > 0.2f) sr.color = Color.yellow;
+        else sr.color = Color.red;
+
+        healthBar.transform.localScale = new Vector3(percentage, 1, 1);
+    }
+
+    /*private void ShowDamageAmount(int damage)
     {
         // Implement damage number display logic here
         Debug.Log($"Damage: {damage}");
-    }
+    }*/
 }

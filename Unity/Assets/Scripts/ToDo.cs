@@ -17,12 +17,5 @@ public class ToDo : MonoBehaviour
      *** WebSocketBridge
      * 1) finished state i geldiðine websocket baðlantýsý kapatýlmalý
      * 2) adb logcat baþlatýldýðýnda app henüz baðlanmadan bazý outlar alýyorum. onlarý incele.
-     * 
-     *** GameController
-     * 1) HandleGameStatusChange --> to be implemented ya da gerek var mý oyun zaten sadece biri öldüðünde bitiyor.
-     *
-     *** PlayerController
-     * 1) ShowDamageNumber --> to be implemented
-     * 2) 
      */
 }
