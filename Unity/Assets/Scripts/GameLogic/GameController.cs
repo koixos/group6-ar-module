@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
@@ -21,10 +20,9 @@ public class GameController : MonoBehaviour
         this.arena = arena;
     }
 
-    public void ProcessGameState(string json)
+    public void ProcessGameState(GameState state)
     {
-        GameState state = JsonUtility.FromJson<GameState>(json);
-        if (state.gameStatus == "finished" || state == null || state.players == null || state.players.Length == 0)
+        if (state.status == "finished" || state == null || state.players == null || state.players.Length == 0)
             return;
 
         string stateHash = state.currentTurnPlayerId + "_" + string.Join(",", state.players.Select(p => $"{p.id}_{p.health}_{p.state}"));
@@ -60,7 +58,7 @@ public class GameController : MonoBehaviour
         }
     }
 
-    private void SpawnPlayers(PlayerState[] players)
+    private void SpawnPlayers(PlayerStatus[] players)
     {
         Transform arenaTransform = arena.transform;
         Vector3 arenaRight = arenaTransform.right;
@@ -83,7 +81,7 @@ public class GameController : MonoBehaviour
         isPlayersSpawned = true;
     }
 
-    private bool SpawnPlayer(PlayerState player, Vector3 position, Quaternion rotation)
+    private bool SpawnPlayer(PlayerStatus player, Vector3 position, Quaternion rotation)
     {
         var prefab = GetPlayerPrefab(player.avatar);
         if (prefab == null) return false;
@@ -150,25 +148,4 @@ public class GameController : MonoBehaviour
             foreach (var player in players.Values)
                 player.PlayIdleAnimation();
     }*/
-}
-
-[Serializable]
-public class GameState
-{
-    public string gameStatus;
-    public string currentTurnPlayerId;
-    public PlayerState[] players;
-}
-
-[Serializable]
-public class PlayerState
-{
-    public string id;
-    public string username;
-    public string avatar;
-    public int health;
-    public int maxhealth;
-    public string state;
-    public string attackType = "";
-    public int attackDamage = 0;
 }

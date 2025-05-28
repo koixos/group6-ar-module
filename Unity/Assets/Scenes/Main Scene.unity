@@ -452,7 +452,7 @@ GameObject:
   - component: {fileID: 304651681}
   - component: {fileID: 304651682}
   m_Layer: 0
-  m_Name: APIBridge
+  m_Name: API Manager
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -485,10 +485,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d27f6dbc14dfa046bb0eb15ddd029bc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  gameController: {fileID: 1987661509}
-  sessionId: 681c8ee256a702d8c1500b40
-  authToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2ODFhMDY0NjcxNmEzOGI0MDkyZmUzMDciLCJpYXQiOjE3NDgxODI0NzYsImV4cCI6MTc0ODE4NjA3Nn0.uvalja8l1fQAsfViYiys7KI1VGVSkPorSNYReIiGWss
-  pollingInterval: 2
+  baseUrl: http://192.168.137.1:3001/api/ar
 --- !u!1 &464482864
 GameObject:
   m_ObjectHideFlags: 0
@@ -747,10 +744,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 83e5410a97373d34a9587f42c2ff8a0e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  apiManager: {fileID: 304651682}
+  joinRoomPanel: {fileID: 2103721691}
+  errorTxt: {fileID: 131276297}
+  roomCodeInp: {fileID: 1350941926}
+  connectBtn: {fileID: 98260183}
   gameController: {fileID: 1987661510}
   raycastManager: {fileID: 1775594513}
-  cam: {fileID: 0}
-  arenaPrefab: {fileID: 0}
+  cam: {fileID: 1722859281}
+  arenaPrefab: {fileID: 5522576289842606490, guid: 6dca2ac205d338d40b4c317990be84f7, type: 3}
 --- !u!4 &968190168
 Transform:
   m_ObjectHideFlags: 0
@@ -2113,6 +2115,6 @@ SceneRoots:
   - {fileID: 1575595199}
   - {fileID: 304651681}
   - {fileID: 968190168}
+  - {fileID: 1987661511}
   - {fileID: 619326957}
   - {fileID: 1877891088}
-  - {fileID: 1987661511}
