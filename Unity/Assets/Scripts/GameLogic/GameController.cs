@@ -12,15 +12,16 @@ public class GameController : MonoBehaviour
     private readonly Dictionary<string, PlayerController> players = new();
     private GameObject arena;
     private string latestState = "";
-    private bool isPlayersSpawned = false;
 
-    public void SetArena(GameObject arena)
+    public bool SetArena(GameObject arena)
     {
-        if (arena == null || this.arena != null) return;
+        if (arena == null || this.arena != null)
+            return false;
         this.arena = arena;
+        return true;
     }
 
-    public void ProcessGameState(GameState state)
+    public void ProcessGameState(GameState state, bool isFirst)
     {
         if (state.status == "finished" || state == null || state.players == null || state.players.Length == 0)
             return;
@@ -30,8 +31,8 @@ public class GameController : MonoBehaviour
         latestState = stateHash;
         Debug.Log($"Processing game state: {stateHash}");
 
-        if (!isPlayersSpawned && arena != null)
-            SpawnPlayers(state.players);
+        if (isFirst)
+            if (!SpawnPlayers(state.players)) return;
             
         foreach (var player in state.players)
         {
@@ -59,7 +60,7 @@ public class GameController : MonoBehaviour
         }
     }
 
-    private void SpawnPlayers(PlayerStatus[] players)
+    private bool SpawnPlayers(PlayerStatus[] players)
     {
         Transform arenaTransform = arena.transform;
         Vector3 arenaRight = arenaTransform.right;
@@ -76,79 +77,23 @@ public class GameController : MonoBehaviour
         Quaternion p1Rot = Quaternion.LookRotation(-arenaRight, arenaTransform.up);
         Quaternion p2Rot = Quaternion.LookRotation(arenaRight, arenaTransform.up);
 
-        if (!SpawnPlayer(players[0], p1Pos, p1Rot)) return;
-        if (!SpawnPlayer(players[1], p2Pos, p2Rot)) return;
-
-        isPlayersSpawned = true;
+        if (!SpawnPlayer(players[0], p1Pos, p1Rot)) return false;
+        if (!SpawnPlayer(players[1], p2Pos, p2Rot)) return false;
+        return true;
     }
 
     private bool SpawnPlayer(PlayerStatus player, Vector3 position, Quaternion rotation)
     {
-        var prefab = GetPlayerPrefab(player.avatar);
+        var prefab = Resources.Load<GameObject>($"Avatars/{player.avatar}");
         if (prefab == null) return false;
-        
-        Debug.Log($"Spawning player {player.username} with avatar {player.avatar}");
-
         GameObject playerObj = Instantiate(prefab, position, rotation, arena.transform);
         playerObj.transform.localScale = Vector3.one;
 
-        var playerController = playerObj.GetComponent<PlayerController>() ?? playerObj.AddComponent<PlayerController>();
+        if (!prefab.TryGetComponent<PlayerController>(out var playerController))
+            return false;
 
         playerController.Initialize(player.id, player.username, player.avatar, player.health, player.maxhealth);
-
         players.Add(player.id, playerController);
         return true;
     }
-
-    private GameObject GetPlayerPrefab(string name)
-    {
-        return Resources.LoadAll<GameObject>($"Avatars").FirstOrDefault(a => a.name == name);
-    }
-
-    
-
-    /*private void Highlight(bool enable)
-    {
-        if (highlight == null) return;
-        highlight.SetActive(enable);
-    }
-
-    private void CheckGameEnd(GameStateMessage newState)
-    {
-        foreach (var player in newState.players)
-        {
-            if (player.health <= 0)
-            {
-                string winnerId = newState.players.FirstOrDefault(p => p.id != player.id)?.id;
-                EndGame(winnerId);
-                break;
-            }
-        }
-    }
-
-    private void EndGame(string winnerId)
-    {
-        if (string.IsNullOrEmpty(winnerId)) return;
-        
-        foreach (var player in players.Values)
-        {
-            if (player.id == winnerId)
-                player.PlayVictoryAnimation();
-            else
-                player.PlayDefeatAnimation();
-        }
-    }
-
-    private void HandleGameStatusChange(string newStatus)
-    {
-        if (newStatus == "finished")
-            foreach (var player in players.Values)
-                player.PlayIdleAnimation();
-        else if (newStatus == "ongoing")
-            foreach (var player in players.Values)
-                player.PlayIdleAnimation();
-        else
-            foreach (var player in players.Values)
-                player.PlayIdleAnimation();
-    }*/
 }

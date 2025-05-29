@@ -1,3 +1,4 @@
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,6 +14,7 @@ public class PlayerController : MonoBehaviour
     private Image healthBarFill;
     private Animator animator;
     private GameObject currentAttackEffect;
+    private Camera cam;
 
     private string id;
     private string username;
@@ -23,16 +25,15 @@ public class PlayerController : MonoBehaviour
 
     void Awake()
     {
+        cam = FindARCam();
         animator = GetComponent<Animator>();
-        //if (highlight == null)
-        //highlight = transform.Find("Highlight")?.gameObject;
     }
 
     void LateUpdate()
     {
-        if (playerCanvas != null && Camera.main != null)
+        if (playerCanvas != null && cam != null)
         {
-            Vector3 lookDir = Camera.main.transform.position - playerCanvas.transform.position;
+            Vector3 lookDir = cam.transform.position - playerCanvas.transform.position;
             lookDir.y = 0;
             if (lookDir != Vector3.zero)
                 playerCanvas.transform.rotation = Quaternion.LookRotation(-lookDir);
@@ -80,12 +81,39 @@ public class PlayerController : MonoBehaviour
     public void PlayDefeatAnimation() => PlayAnimation("defeat");
     public void PlayVictoryAnimation() => PlayAnimation("victory");
     
+    private Camera FindARCam()
+    {
+        if (Camera.main != null) return Camera.main;
+        var arCam = FindObjectOfType<UnityEngine.XR.ARFoundation.ARCameraManager>();
+        if (arCam != null) return arCam.GetComponent<Camera>();
+        Debug.LogWarning("No AR camera found, using default camera.");
+        return null;
+    }
+
     private void CreatePlayerUI()
     {
         if (uiCanvasPrefab != null)
         {
+            Debug.Log($"[{username}] Using prefab UI");
+
             GameObject canvasObj = Instantiate(uiCanvasPrefab, transform);
+            canvasObj.transform.SetParent(transform);
+            canvasObj.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
+            canvasObj.transform.localScale = Vector3.one;
+
             playerCanvas = canvasObj.GetComponent<Canvas>();
+            if (playerCanvas != null)
+            {
+                playerCanvas.renderMode = RenderMode.WorldSpace;
+                playerCanvas.worldCamera = cam;
+
+                if (playerCanvas.TryGetComponent<CanvasScaler>(out var scaler))
+                    scaler.enabled = false;
+            
+                if (playerCanvas.TryGetComponent<RectTransform>(out var rectTransform))
+                    rectTransform.sizeDelta = new Vector2(3f, 2f);
+            }
+
             SetupUIReferences();
         }
         else
@@ -95,34 +123,45 @@ public class PlayerController : MonoBehaviour
 
             playerCanvas = canvasObj.AddComponent<Canvas>();
             playerCanvas.renderMode = RenderMode.WorldSpace;
-            playerCanvas.worldCamera = Camera.main;
+            playerCanvas.worldCamera = cam;
 
-            CanvasScaler scaler = canvasObj.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ConstantPixelSize;
-            scaler.scaleFactor = 0.01f;
-
-            canvasObj.AddComponent<GraphicRaycaster>();
+            RectTransform canvasRect = playerCanvas.GetComponent<RectTransform>();
+            canvasRect.sizeDelta = new Vector2(3f, 2f);
 
             CreateUIElements(canvasObj);
         }
 
         PositionUI();
+
+        Debug.Log($"[{username}] UI Validation:");
+        Debug.Log($"  - Canvas: {(playerCanvas != null ? "OK" : "MISSING")}");
+        Debug.Log($"  - NameText: {(nameText != null ? nameText.text : "MISSING")}");
+        Debug.Log($"  - HealthBar: {(healthBar != null ? $"Value: {healthBar.value}/{healthBar.maxValue}" : "MISSING")}");
+
+        if (playerCanvas != null)
+        {
+            Debug.Log($"  - Canvas Size: {playerCanvas.GetComponent<RectTransform>().sizeDelta}");
+            Debug.Log($"  - Canvas Scale: {playerCanvas.transform.localScale}");
+            Debug.Log($"  - Canvas Position: {playerCanvas.transform.localPosition}");
+        }
     }
 
     private void CreateUIElements(GameObject canvasObj)
     {
-        GameObject nameObj = new("Username");
+        GameObject nameObj = new("UserName");
         nameObj.transform.SetParent(canvasObj.transform);
 
         nameText = nameObj.AddComponent<TextMeshProUGUI>();
         nameText.text = username;
-        nameText.fontSize = 24;
+        nameText.fontSize = 0.5f;
         nameText.color = Color.white;
         nameText.alignment = TextAlignmentOptions.Center;
 
         RectTransform nameRect = nameText.GetComponent<RectTransform>();
-        nameRect.sizeDelta = new Vector2(200, 50);
-        nameRect.anchoredPosition = new Vector2(0, 60);
+        nameRect.sizeDelta = new Vector2(2.5f, 0.6f);
+        nameRect.anchoredPosition = new Vector2(0, 0.8f);
+
+        Debug.Log($"[{username}] Username text created: '{nameText.text}', fontSize: {nameText.fontSize}");
 
         GameObject healthBGObj = new("HealthBar");
         healthBGObj.transform.SetParent(canvasObj.transform);
@@ -131,8 +170,8 @@ public class PlayerController : MonoBehaviour
         healthBG.color = new(0.2f, 0.2f, 0.2f, 0.8f);
 
         RectTransform healthBGRect = healthBG.GetComponent<RectTransform>();
-        healthBGRect.sizeDelta = new Vector2(100, 12);
-        healthBGRect.anchoredPosition = new Vector2(0, 30);
+        healthBGRect.sizeDelta = new Vector2(2f, 0.3f);
+        healthBGRect.anchoredPosition = new Vector2(0, 0.2f);
 
         GameObject healthFillObj = new("HealthBarFill");
         healthFillObj.transform.SetParent(healthBGObj.transform);
@@ -153,17 +192,54 @@ public class PlayerController : MonoBehaviour
         healthBar.minValue = 0;
         healthBar.maxValue = maxHealth;
         healthBar.value = health;
+        healthBar.interactable = false;
+
+        Debug.Log($"[{username}] Health bar created: {health}/{maxHealth}");
     }
 
     private void SetupUIReferences()
     {
-        if (playerCanvas != null)
-        {
-            nameText = playerCanvas.GetComponentInChildren<TextMeshProUGUI>();
-            healthBar = playerCanvas.GetComponentInChildren<Slider>();
+        if (playerCanvas == null) return;
 
-            if (healthBar != null && healthBar.fillRect != null)
-                healthBarFill = healthBar.fillRect.GetComponent<Image>();
+        for (int i = 0; i < playerCanvas.transform.childCount; i++)
+        {
+            Transform child = playerCanvas.transform.GetChild(i);
+            Debug.Log($"[{username}] Child {i}: {child.name} - Components: {string.Join(", ", child.GetComponents<Component>().Select(c => c.GetType().Name))}");
+        }
+
+        nameText = playerCanvas.GetComponentInChildren<TextMeshProUGUI>();
+        healthBar = playerCanvas.GetComponentInChildren<Slider>();
+        
+        if (healthBar.fillRect != null)
+            healthBarFill = healthBar.fillRect.GetComponent<Image>();
+
+        Transform usernameObj = playerCanvas.transform.Find("UserName");
+        if (usernameObj != null)
+        {
+            if (usernameObj.TryGetComponent<TextMeshProUGUI>(out var manualText))
+            {
+                nameText = manualText;
+                Debug.Log($"[{username}] NameText set manually: '{nameText.text}'");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"[{username}] No 'Username' object found");
+        }
+
+        Transform healthObj = playerCanvas.transform.Find("HealthBar");
+        if (healthObj != null)
+        {
+            Debug.Log($"[{username}] Found HealthBar object by name");
+            if (healthObj.TryGetComponent<Slider>(out var manualSlider))
+            {
+                healthBar = manualSlider;
+                Debug.Log($"[{username}] HealthBar set manually");
+            }
+        }
+        else
+        {
+            Debug.LogWarning($"[{username}] No 'HealthBar' object found");
         }
     }
 
@@ -178,7 +254,8 @@ public class PlayerController : MonoBehaviour
 
     private void UpdateUI()
     {
-        if (nameText != null) nameText.text = username;
+        if (nameText != null) 
+            nameText.text = username;
         if (healthBar != null)
         {
             healthBar.maxValue = maxHealth;

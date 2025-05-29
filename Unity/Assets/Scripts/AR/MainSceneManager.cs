@@ -199,7 +199,7 @@ public class MainSceneManager : MonoBehaviour
                 if (gameState != null)
                 {
                     Debug.Log($"Game status: {JsonUtility.ToJson(gameState, true)}");
-                    gameController.ProcessGameState(gameState);
+                    gameController.ProcessGameState(gameState, false);
                 }
                 else
                 {
@@ -272,14 +272,13 @@ public class MainSceneManager : MonoBehaviour
 
         if (gameController != null)
         {
-            gameController.SetArena(gameArena);
-            arenaPlaced = true;
+            arenaPlaced = gameController.SetArena(gameArena);
         }
     }
 
     private string[] SplitJsonObjects(string jsonContent)
     {
-        List<string> jsonObjects = new List<string>();
+        List<string> jsonObjects = new();
         int braceCount = 0;
         int startIndex = 0;
         bool inString = false;
@@ -404,7 +403,10 @@ public class MainSceneManager : MonoBehaviour
             {
                 Debug.Log(i + 1);
                 GameState resp = JsonUtility.FromJson<GameState>(currGS);
-                gameController.ProcessGameState(resp);
+                if (i == 0)
+                    gameController.ProcessGameState(resp, true);
+                else
+                    gameController.ProcessGameState(resp, false);
             }
             catch (Exception ex)
             {
