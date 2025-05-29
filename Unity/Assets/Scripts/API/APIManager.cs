@@ -7,13 +7,14 @@ public class APIManager : MonoBehaviour
 {
     [Header("API Configuration")]
     public string baseUrl = "http://192.168.137.1:3001/api/ar";
-    private string sessionId = "";
-    private string authToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2ODFhMDY0NjcxNmEzOGI0MDkyZmUzMDciLCJpYXQiOjE3NDg0MTQ4NjAsImV4cCI6MTc0ODQxODQ2MH0.NO98js39DZXVjRiUeJJ4v2sNjkej-Qt3GuomRM29xXw";
+    private string sessionId;
+    private string authToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2ODFhMDY0NjcxNmEzOGI0MDkyZmUzMDciLCJpYXQiOjE3NDg0MzM5NTUsImV4cCI6MTc0ODQzNzU1NX0.2NlDNGV9WNB6u9u_XmTNseQedhnq2KzVXgUPdWPpurU";
 
-    private Coroutine gameStateCoroutine;
+    private Coroutine joinRoomCoroutine;
+    private bool isJoiningRoom = false;
 
-    public event Action<JoinRoomResponse> OnJoinRoomResponse;
-    public event Action<GameState> OnGameStateUpdated;
+    public event Action<ServerResponse> OnJoinRoomResponse;
+    public event Action<ServerResponse> OnGameStateUpdated;
     public event Action<string> OnError;
 
     void OnDestroy()
@@ -25,26 +26,18 @@ public class APIManager : MonoBehaviour
 
     public void JoinRoom(int code)
     {
-        StartCoroutine(JoinRoomCoroutine(code));
+        if (isJoiningRoom) return;
+        if (joinRoomCoroutine != null) StopCoroutine(joinRoomCoroutine);
+        isJoiningRoom = true;
+        joinRoomCoroutine = StartCoroutine(JoinRoomCoroutine(code));
     }
 
-    public bool IsAuthenticated()
+    public void StartSpectating()
     {
-        return !string.IsNullOrEmpty(authToken);
+        StartCoroutine(GameStateUpdateCoroutine(2f));
     }
 
-    public string GetAuthToken()
-    {
-        return authToken;
-    }
-
-    public void ClearAuth()
-    {
-        authToken = null;
-        StopGameStateUpdates();
-    }
-    
-    public void GetGameState()
+    public void GetCurrentGameState()
     {
         if (string.IsNullOrEmpty(authToken))
         {
@@ -56,20 +49,10 @@ public class APIManager : MonoBehaviour
         StartCoroutine(GetGameStateCoroutine());
     }
 
-    public void StartGameStateUpdates(float interval = 1f)
+    public void ClearAuth()
     {
-        if (string.IsNullOrEmpty(authToken))
-        {
-            Debug.LogError("Auth token is not set. Cannot start game state updates.");
-            return;
-        }
-
-        if (gameStateCoroutine != null)
-        {
-            StopCoroutine(gameStateCoroutine);
-        }
-
-        gameStateCoroutine = StartCoroutine(GameStateUpdateCoroutine(interval));
+        authToken = null;
+        StopGameStateUpdates();
     }
 
     public void LeaveRoom()
@@ -78,13 +61,20 @@ public class APIManager : MonoBehaviour
         StartCoroutine(LeaveRoomCoroutine());
     }
 
-    public void StopGameStateUpdates()
+    public void SetSessionId(string sessionId)
     {
-        if (gameStateCoroutine != null)
+        this.sessionId = sessionId;
+        /*if (gameStateCoroutine != null)
+            StopGameStateUpdates();*/
+    }
+
+    private void StopGameStateUpdates()
+    {
+        /*if (gameStateCoroutine != null)
         {
             StopCoroutine(gameStateCoroutine);
             gameStateCoroutine = null;
-        }
+        }*/
     }
 
     private IEnumerator JoinRoomCoroutine(int code)
@@ -92,9 +82,7 @@ public class APIManager : MonoBehaviour
         JoinRoomRequest requestData = new() { code = code };
         string jsonData = JsonUtility.ToJson(requestData);
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
-
         string url = $"{baseUrl}/room/{code}/add-spectator";
-        Debug.Log($"Joined room: {url}");
 
         using UnityWebRequest www = new(url, "POST");
         www.uploadHandler = new UploadHandlerRaw(bodyRaw);
@@ -104,7 +92,9 @@ public class APIManager : MonoBehaviour
         www.timeout = 15;
 
         yield return www.SendWebRequest();
-        
+
+        isJoiningRoom = false;
+
         if (www.result != UnityWebRequest.Result.Success)
         {
             Debug.LogError($"Join Room failed - Result: {www.result}, Error: {www.error}");
@@ -116,9 +106,10 @@ public class APIManager : MonoBehaviour
         {
             try
             {
-                JoinRoomResponse response = JsonUtility.FromJson<JoinRoomResponse>(www.downloadHandler.text);
+                string rawResponse = www.downloadHandler.text;
+                Debug.Log($"Joined room: {url} - raw response: {rawResponse}");
+                ServerResponse response = JsonUtility.FromJson<ServerResponse>(rawResponse);
                 OnJoinRoomResponse?.Invoke(response);
-
             }
             catch (Exception ex)
             {
@@ -140,6 +131,8 @@ public class APIManager : MonoBehaviour
 
     private IEnumerator GetGameStateCoroutine()
     {
+        string url = $"{baseUrl}/{sessionId}";
+
         using UnityWebRequest www = UnityWebRequest.Get($"{baseUrl}/{sessionId}");
         www.SetRequestHeader("Authorization", "Bearer " + authToken);
         www.timeout = 10;
@@ -150,8 +143,10 @@ public class APIManager : MonoBehaviour
         {
             try
             {
-                GameState gameState = JsonUtility.FromJson<GameState>(www.downloadHandler.text);
-                OnGameStateUpdated?.Invoke(gameState);
+                string rawResponse = www.downloadHandler.text;
+                Debug.Log($"Getting state of {url} - raw response: {rawResponse}");
+                ServerResponse response = JsonUtility.FromJson<ServerResponse>(rawResponse);
+                OnGameStateUpdated?.Invoke(response);
             }
             catch (Exception ex)
             {
@@ -199,30 +194,42 @@ public class JoinRoomRequest
 }
 
 [Serializable]
-public class JoinRoomResponse
+public class ServerResponse
 {
-    public string gameState;
+    public string _id;
+    public string gameStatus;
+    public string currentTurnCharacterId;
+    public string roomCode;
+    public ServerUser[] users;
+    public string[] spectators;
+    public string timeStamp;
+    public int __v;
 }
 
 [Serializable]
-public class GameState
+public class ServerUser
 {
-    public string sessionId;
-    public string status;
-    public string currentTurnPlayerId;
-    public PlayerStatus[] players;
-}
-
-[Serializable]
-public class PlayerStatus
-{
-    public string id;
-    public string username;
+    public string userid;
+    public CharacterState characterState;
+    public string characterName;
+    public string @class;
     public string avatar;
+    public string _id;
+    public int maxHealth;
+}
+
+[Serializable]
+public class CharacterState
+{
+    public string _id;
     public int health;
-    public int maxhealth;
     public string state;
-    public string attackType = "";
-    public int attackDamage = 0;
+    public string attackAction;
+    public int attackDamage;
+    public int heal;
+    public int bleedingCount;
+    public int bleedingDamage;
+    public int stun;
+    public int __v;
 }
 

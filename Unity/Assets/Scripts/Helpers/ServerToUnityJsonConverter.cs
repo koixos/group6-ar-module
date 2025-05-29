@@ -1,4 +1,5 @@
 using Newtonsoft.Json.Linq;
+using System;
 using System.Xml;
 using UnityEngine;
 
@@ -6,32 +7,54 @@ public class ServerToUnityJsonConverter : MonoBehaviour
 {
     public static string Convert(string serverJson)
     {
-        var serverObj = JObject.Parse(serverJson);
-        var unityObj = new JObject
+        try
         {
-            ["gameStatus"] = serverObj["gameStatus"],
-            ["currentTurnCharacterId"] = serverObj["currentTurnCharacterId"]
-        };
-        
-        var players = new JArray();
-        foreach (var usr in serverObj["users"] as JArray)
-        {
-            var player = new JObject
+            var serverObj = JObject.Parse(serverJson);
+
+            var unityObj = new JObject
             {
-                ["id"] = usr["_id"],
-                ["characterName"] = usr["characterName"],
-                ["avatar"] = usr["avatar"],
-                ["maxHealth"] = usr["maxHealth"],
-                ["health"] = usr["characterState"]["health"],
-                ["state"] = usr["characterState"]["state"],
-                ["attackType"] = usr["characterState"]["attackAction"],
-                ["attackDamage"] = usr["characterState"]["attackDamage"]
+                ["sessionId"] = serverObj["_id"],
+                ["status"] = serverObj["gameStatus"],
+                ["currentTurnPlayerId"] = serverObj["currentTurnCharacterId"]
             };
 
-            players.Add(player);
-        }
-        unityObj["players"] = players;
+            var players = new JArray();
 
-        return unityObj.ToString((Newtonsoft.Json.Formatting)Formatting.Indented);
+            if (serverObj["users"] is JArray usersArray)
+            {
+                foreach (var user in usersArray)
+                {
+                    var characterState = user["characterState"];
+
+                    var player = new JObject
+                    {
+                        ["id"] = user["_id"],
+                        ["username"] = user["characterName"],
+                        ["avatar"] = user["avatar"],
+                        ["health"] = characterState["health"],
+                        ["maxhealth"] = user["maxHealth"],
+                        ["state"] = characterState["state"],
+                        ["attackType"] = characterState["attackAction"],
+                        ["attackDamage"] = characterState["attackDamage"],
+                        ["bleedingCount"] = characterState["bleedingCount"],
+                        ["bleedingDamage"] = characterState["bleedingDamage"],
+                        ["heal"] = characterState["heal"]
+                        ["stun"] = characterState["stun"]
+                    };
+                    players.Add(player);
+                }
+            }
+
+            unityObj["players"] = players;
+
+            Debug.Log($"Converted JSON: {unityObj}");
+            return unityObj.ToString();
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"JSON Conversion Error: {ex.Message}");
+            Debug.LogError($"Input JSON: {serverJson}");
+            return null;
+        }
     }
 }

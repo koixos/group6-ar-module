@@ -335,8 +335,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7e2141f0a33b91488a79edfa10dabb7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nameText: {fileID: 5477639823684640079}
-  healthBar: {fileID: 8863399205610692460}
+  uiCanvasPrefab: {fileID: 4643259505242513419, guid: 2b09315dbdef6fb4dab9f5f5b830065e, type: 3}
 --- !u!4 &6448268158200588495 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: df98d27420623ef479d83ba100ba0624, type: 3}

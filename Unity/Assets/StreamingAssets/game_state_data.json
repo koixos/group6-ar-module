@@ -1,0 +1,387 @@
+[
+    {
+        "sessionId": "",
+        "status": "start",
+        "currentTurnPlayerId": "",
+        "players": [
+            {
+                "id": "p1",
+                "username": "WarriorQueen",
+                "avatar": "GreatSword",
+                "health": 85,
+                "maxhealth": 115,
+                "state": "idle",
+                "attackType": "",
+                "attackDamage": 0,
+                "heal": 0,
+                "bleedingCount": 0,
+                "bleedingDamage": 0,
+                "stun": 0
+            },
+            {
+                "id": "p2",
+                "username": "Voldemort",
+                "avatar": "Archer",
+                "health": 102,
+                "maxhealth": 115,
+                "state": "idle",
+                "attackType": "",
+                "attackDamage": 0,
+                "heal": 0,
+                "bleedingCount": 0,
+                "bleedingDamage": 0,
+                "stun": 0
+            }
+        ]
+    },
+    {
+        "sessionId": "",
+        "status": "ongoing",
+        "currentTurnPlayerId": "p1",
+        "players": [
+            {
+                "id": "p1",
+                "username": "WarriorQueen",
+                "avatar": "GreatSword",
+                "health": 85,
+                "maxhealth": 115,
+                "state": "attack",
+                "attackType": "fireball",
+                "attackDamage": 15,
+                "heal": 0,
+                "bleedingCount": 0,
+                "bleedingDamage": 0,
+                "stun": 0
+            },
+            {
+                "id": "p2",
+                "username": "Voldemort",
+                "avatar": "Archer",
+                "health": 102,
+                "maxhealth": 115,
+                "state": "hurt",
+                "attackType": "",
+                "attackDamage": 0,
+                "heal": 0,
+                "bleedingCount": 0,
+                "bleedingDamage": 0,
+                "stun": 0
+            }
+        ]
+    },
+    {
+        "sessionId": "",
+        "status": "ongoing",
+        "currentTurnPlayerId": "p2",
+        "players": [
+            {
+                "id": "p1",
+                "username": "WarriorQueen",
+                "avatar": "GreatSword",
+                "health": 85,
+                "maxhealth": 115,
+                "state": "hurt",
+                "attackType": "",
+                "attackDamage": 0,
+                "heal": 0,
+                "bleedingCount": 0,
+                "bleedingDamage": 0,
+                "stun": 0
+            },
+            {
+                "id": "p2",
+                "username": "Voldemort",
+                "avatar": "Archer",
+                "health": 87,
+                "maxhealth": 115,
+                "state": "attack",
+                "attackType": "lightening",
+                "attackDamage": 25,
+                "heal": 0,
+                "bleedingCount": 0,
+                "bleedingDamage": 0,
+                "stun": 0
+            }
+        ]
+    },
+    {
+        "sessionId": "",
+        "status": "ongoing",
+        "currentTurnPlayerId": "p1",
+        "players": [
+            {
+                "id": "p1",
+                "username": "WarriorQueen",
+                "avatar": "GreatSword",
+                "health": 60,
+                "maxhealth": 115,
+                "state": "attack",
+                "attackType": "lightening",
+                "attackDamage": 25,
+                "heal": 0,
+                "bleedingCount": 0,
+                "bleedingDamage": 0,
+                "stun": 0
+            },
+            {
+                "id": "p2",
+                "username": "Voldemort",
+                "avatar": "Archer",
+                "health": 87,
+                "maxhealth": 115,
+                "state": "hurt",
+                "attackType": "",
+                "attackDamage": 0,
+                "heal": 0,
+                "bleedingCount": 0,
+                "bleedingDamage": 0,
+                "stun": 0
+            }
+        ]
+    },
+    {
+        "sessionId": "",
+        "status": "ongoing",
+        "currentTurnPlayerId": "p2",
+        "players": [
+            {
+                "id": "p1",
+                "username": "WarriorQueen",
+                "avatar": "GreatSword",
+                "health": 60,
+                "maxhealth": 115,
+                "state": "hurt",
+                "attackType": "",
+                "attackDamage": 0,
+                "heal": 0,
+                "bleedingCount": 0,
+                "bleedingDamage": 0,
+                "stun": 0
+            },
+            {
+                "id": "p2",
+                "username": "Voldemort",
+                "avatar": "Archer",
+                "health": 62,
+                "maxhealth": 115,
+                "state": "attack",
+                "attackType": "fireball",
+                "attackDamage": 15,
+                "heal": 0,
+                "bleedingCount": 0,
+                "bleedingDamage": 0,
+                "stun": 0
+            }
+        ]
+    },
+    {
+        "sessionId": "",
+        "status": "ongoing",
+        "currentTurnPlayerId": "p1",
+        "players": [
+            {
+                "id": "p1",
+                "username": "WarriorQueen",
+                "avatar": "GreatSword",
+                "health": 45,
+                "maxhealth": 115,
+                "state": "attack",
+                "attackType": "lightening",
+                "attackDamage": 25,
+                "heal": 0,
+                "bleedingCount": 0,
+                "bleedingDamage": 0,
+                "stun": 0
+            },
+            {
+                "id": "p2",
+                "username": "Voldemort",
+                "avatar": "Archer",
+                "health": 62,
+                "maxhealth": 115,
+                "state": "hurt",
+                "attackType": "",
+                "attackDamage": 0,
+                "heal": 0,
+                "bleedingCount": 0,
+                "bleedingDamage": 0,
+                "stun": 0
+            }
+        ]
+    },
+    {
+        "sessionId": "",
+        "status": "ongoing",
+        "currentTurnPlayerId": "p2",
+        "players": [
+            {
+                "id": "p1",
+                "username": "WarriorQueen",
+                "avatar": "GreatSword",
+                "health": 45,
+                "maxhealth": 115,
+                "state": "hurt",
+                "attackType": "",
+                "attackDamage": 0,
+                "heal": 0,
+                "bleedingCount": 0,
+                "bleedingDamage": 0,
+                "stun": 0
+            },
+            {
+                "id": "p2",
+                "username": "Voldemort",
+                "avatar": "Archer",
+                "health": 37,
+                "maxhealth": 115,
+                "state": "attack",
+                "attackType": "fireball",
+                "attackDamage": 15,
+                "heal": 0,
+                "bleedingCount": 0,
+                "bleedingDamage": 0,
+                "stun": 0
+            }
+        ]
+    },
+    {
+        "sessionId": "",
+        "status": "ongoing",
+        "currentTurnPlayerId": "p1",
+        "players": [
+            {
+                "id": "p1",
+                "username": "WarriorQueen",
+                "avatar": "GreatSword",
+                "health": 30,
+                "maxhealth": 115,
+                "state": "attack",
+                "attackType": "lightening",
+                "attackDamage": 25,
+                "heal": 0,
+                "bleedingCount": 0,
+                "bleedingDamage": 0,
+                "stun": 0
+            },
+            {
+                "id": "p2",
+                "username": "Voldemort",
+                "avatar": "Archer",
+                "health": 37,
+                "maxhealth": 115,
+                "state": "hurt",
+                "attackType": "",
+                "attackDamage": 0,
+                "heal": 0,
+                "bleedingCount": 0,
+                "bleedingDamage": 0,
+                "stun": 0
+            }
+        ]
+    },
+    {
+        "sessionId": "",
+        "status": "ongoing",
+        "currentTurnPlayerId": "p2",
+        "players": [
+            {
+                "id": "p1",
+                "username": "WarriorQueen",
+                "avatar": "GreatSword",
+                "health": 30,
+                "maxhealth": 115,
+                "state": "hurt",
+                "attackType": "",
+                "attackDamage": 0,
+                "heal": 0,
+                "bleedingCount": 0,
+                "bleedingDamage": 0,
+                "stun": 0
+            },
+            {
+                "id": "p2",
+                "username": "Voldemort",
+                "avatar": "Archer",
+                "health": 12,
+                "maxhealth": 115,
+                "state": "attack",
+                "attackType": "lightening",
+                "attackDamage": 25,
+                "heal": 0,
+                "bleedingCount": 0,
+                "bleedingDamage": 0,
+                "stun": 0
+            }
+        ]
+    },
+    {
+        "sessionId": "",
+        "status": "ongoing",
+        "currentTurnPlayerId": "p1",
+        "players": [
+            {
+                "id": "p1",
+                "username": "WarriorQueen",
+                "avatar": "GreatSword",
+                "health": 5,
+                "maxhealth": 115,
+                "state": "attack",
+                "attackType": "fireball",
+                "attackDamage": 15,
+                "heal": 0,
+                "bleedingCount": 0,
+                "bleedingDamage": 0,
+                "stun": 0
+            },
+            {
+                "id": "p2",
+                "username": "Voldemort",
+                "avatar": "Archer",
+                "health": 12,
+                "maxhealth": 115,
+                "state": "hurt",
+                "attackType": "",
+                "attackDamage": 0,
+                "heal": 0,
+                "bleedingCount": 0,
+                "bleedingDamage": 0,
+                "stun": 0
+            }
+        ]
+    },
+    {
+        "sessionId": "",
+        "status": "finished",
+        "currentTurnPlayerId": "p2",
+        "players": [
+            {
+                "id": "p1",
+                "username": "WarriorQueen",
+                "avatar": "GreatSword",
+                "health": 5,
+                "maxhealth": 115,
+                "state": "hurt",
+                "attackType": "",
+                "attackDamage": 0,
+                "heal": 0,
+                "bleedingCount": 0,
+                "bleedingDamage": 0,
+                "stun": 0
+            },
+            {
+                "id": "p2",
+                "username": "Voldemort",
+                "avatar": "Archer",
+                "health": -3,
+                "maxhealth": 115,
+                "state": "attack",
+                "attackType": "lightening",
+                "attackDamage": 25,
+                "heal": 0,
+                "bleedingCount": 0,
+                "bleedingDamage": 0,
+                "stun": 0
+            }
+        ]
+    }
+]

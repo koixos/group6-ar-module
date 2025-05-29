@@ -28,10 +28,11 @@ public class GameController : MonoBehaviour
         string stateHash = state.currentTurnPlayerId + "_" + string.Join(",", state.players.Select(p => $"{p.id}_{p.health}_{p.state}"));
         if (stateHash == latestState) return;
         latestState = stateHash;
+        Debug.Log($"Processing game state: {stateHash}");
 
         if (!isPlayersSpawned && arena != null)
             SpawnPlayers(state.players);
-
+            
         foreach (var player in state.players)
         {
             if (players.TryGetValue(player.id, out var playerController))
@@ -103,6 +104,8 @@ public class GameController : MonoBehaviour
     {
         return Resources.LoadAll<GameObject>($"Avatars").FirstOrDefault(a => a.name == name);
     }
+
+    
 
     /*private void Highlight(bool enable)
     {

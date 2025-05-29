@@ -356,5 +356,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7e2141f0a33b91488a79edfa10dabb7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  nameText: {fileID: 212759995389475999}
-  healthBar: {fileID: 2894675169141185355}
+  uiCanvasPrefab: {fileID: 4643259505242513419, guid: 2b09315dbdef6fb4dab9f5f5b830065e, type: 3}

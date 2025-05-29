@@ -1,6 +1,9 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
@@ -26,17 +29,23 @@ public class MainSceneManager : MonoBehaviour
     private readonly List<ARRaycastHit> hits = new();
     private GameObject gameArena = null;
     private bool arenaPlaced = false;
-    private bool isGameActive = false;
+    private bool isGameActive = false; 
+    private string token;
 
     void Start()
     {
         StartCoroutine(InitializeEverything());
+        ShowJoinRoomPanel(false);
+        isGameActive = true;
     }
 
     void Update()
     {
         if (!arenaPlaced && isGameActive && Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
             PlaceArena(Input.GetTouch(0).position);
+
+        if (arenaPlaced && isGameActive)
+            StartGameStateTest();
     }
 
     void OnDestroy()
@@ -74,17 +83,16 @@ public class MainSceneManager : MonoBehaviour
         }
     }
 
-    private IEnumerator InitializeEverything()
+    public void ReceiveToken(string token)
     {
-        FindComponents();
+        this.token = token;
+        Debug.Log("Received token: " + token);
+    }
 
-        while (apiManager == null || !IsApiManagerReady())
-            yield return new WaitForSeconds(0.1f);
-
-        Debug.Log("All components ready, initializing UI");
-
-        InitializeUI();
-        ShowJoinRoomPanel(true);
+    public void StartGameStateTest()
+    {
+        StartCoroutine(TestGameStatesFromFile());
+        isGameActive = false;
     }
 
     private void InitializeUI()
@@ -101,7 +109,7 @@ public class MainSceneManager : MonoBehaviour
 
         if (errorTxt != null)
             errorTxt.gameObject.SetActive(false);
-   201 }
+    }
 
     private void FindComponents()
     {
@@ -129,55 +137,43 @@ public class MainSceneManager : MonoBehaviour
         }
     }
 
-    private IEnumerator JoinRoomWithDelay(int roomCode)
-    {
-        yield return new WaitForSeconds(0.2f);
-
-        try
-        {
-            apiManager.JoinRoom(roomCode);
-        }
-        catch (System.Exception ex)
-        {
-            Debug.LogError($"Error joining room: {ex.Message}");
-            ShowError("An error occurred while trying to join the room.");
-            SetConnectBtnInteractable(true);
-        }
-    }
-
-    private void HandleJoinRoomResponse(JoinRoomResponse response)
+    private void HandleJoinRoomResponse(ServerResponse response)
     {
         try
         {
-            if (response != null && !string.IsNullOrEmpty(response.gameState))
+            if (response != null)
             {
-                Debug.Log($"Joined room successfully");
-                var gameState = ServerToUnityJsonConverter.Convert(response.gameState);
+                Debug.Log($"Join room response received with {response.users?.Length ?? 0} users");
+
+                var gameState = ConvertToGameState(response);
 
                 if (gameState != null)
                 {
                     isGameActive = true;
                     ShowJoinRoomPanel(false);
 
-                    GameState state = JsonUtility.FromJson<GameState>(gameState);
-                    if (state != null)
-                        gameController.ProcessGameState(state);
+                    Debug.Log($"Joined room successfully with session id: {gameState.sessionId}");
+                    Debug.Log($"Game status: {gameState.status}, Players: {gameState.players?.Length ?? 0}");
+
+                    apiManager.SetSessionId(gameState.sessionId);
+                    apiManager.StartSpectating();
                 }
                 else
                 {
-                    ShowError("Failed to parse game state from server response.");
+                    ShowError("Failed to convert server response.");
                     SetConnectBtnInteractable(true);
                 }
             }
             else
             {
-                ShowError($"Failed to join room");
+                ShowError("Received null response from server.");
                 SetConnectBtnInteractable(true);
             }
-       0 }
+        }
         catch (System.Exception ex)
         {
             Debug.LogError($"Error processing join room response: {ex.Message}");
+            Debug.LogError($"Stack trace: {ex.StackTrace}");
             ShowError("An error occurred while processing the response.");
             SetConnectBtnInteractable(true);
         }
@@ -190,9 +186,38 @@ public class MainSceneManager : MonoBehaviour
         SetConnectBtnInteractable(true);
     }
 
-    private void HandleGameStateUpdate(GameState gameState)
+    private void HandleGameStateUpdate(ServerResponse response)
     {
-        gameController.ProcessGameState(gameState);
+        try
+        {
+            if (response != null)
+            {
+                Debug.Log($"Get State response received with {response.users?.Length ?? 0} users");
+
+                var gameState = ConvertToGameState(response);
+
+                if (gameState != null)
+                {
+                    Debug.Log($"Game status: {JsonUtility.ToJson(gameState, true)}");
+                    gameController.ProcessGameState(gameState);
+                }
+                else
+                {
+                    ShowError("Failed to convert server response.");
+                }
+            }
+            else
+            {
+                ShowError("Received null response from server.");
+                SetConnectBtnInteractable(true);
+            }
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Error processing get state response: {ex.Message}");
+            Debug.LogError($"Stack trace: {ex.StackTrace}");
+            ShowError("An error occurred while processing the response.");
+        }
     }
 
     private void ShowJoinRoomPanel(bool show)
@@ -251,4 +276,200 @@ public class MainSceneManager : MonoBehaviour
             arenaPlaced = true;
         }
     }
+
+    private string[] SplitJsonObjects(string jsonContent)
+    {
+        List<string> jsonObjects = new List<string>();
+        int braceCount = 0;
+        int startIndex = 0;
+        bool inString = false;
+        bool escapeNext = false;
+
+        for (int i = 0; i < jsonContent.Length; i++)
+        {
+            char c = jsonContent[i];
+
+            if (escapeNext)
+            {
+                escapeNext = false;
+                continue;
+            }
+
+            if (c == '\\')
+            {
+                escapeNext = true;
+                continue;
+            }
+
+            if (c == '"')
+            {
+                inString = !inString;
+                continue;
+            }
+
+            if (!inString)
+            {
+                if (c == '{')
+                {
+                    if (braceCount == 0)
+                    {
+                        startIndex = i;
+                    }
+                    braceCount++;
+                }
+                else if (c == '}')
+                {
+                    braceCount--;
+                    if (braceCount == 0)
+                    {
+                        string jsonObject = jsonContent.Substring(startIndex, i - startIndex + 1);
+                        jsonObjects.Add(jsonObject.Trim());
+                    }
+                }
+            }
+        }
+
+        return jsonObjects.ToArray();
+    }
+
+    private GameState ConvertToGameState(ServerResponse response)
+    {
+        try
+        {
+            GameState gameState = new()
+            {
+                sessionId = response._id,
+                status = response.gameStatus,
+                currentTurnPlayerId = response.currentTurnCharacterId
+            };
+
+            if (response.users != null)
+            {
+                gameState.players = new PlayerStatus[response.users.Length];
+                for (int i = 0; i < response.users.Length; i++)
+                {
+                    var user = response.users[i];
+                    gameState.players[i] = new PlayerStatus
+                    {
+                        id = user._id,
+                        username = user.characterName,
+                        avatar = user.avatar,
+                        maxhealth = user.maxHealth,
+                        health = user.characterState?.health ?? user.maxHealth,
+                        state = user.characterState?.state ?? "idle",
+                        attackType = user.characterState?.attackAction ?? "",
+                        attackDamage = user.characterState?.attackDamage ?? 0,
+                        heal = user.characterState?.heal ?? 0,
+                        bleedingCount = user.characterState?.bleedingCount ?? 0,
+                        bleedingDamage = user.characterState?.bleedingDamage ?? 0,
+                        stun = user.characterState?.stun ?? 0
+                    };
+                }
+            }
+            else
+            {
+                gameState.players = new PlayerStatus[0];
+            }
+
+            return gameState;
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Error converting to GameState: {ex.Message}");
+            return null;
+        }
+    }
+
+    private IEnumerator TestGameStatesFromFile()
+    {
+        TextAsset jsonAsset = Resources.Load<TextAsset>("game_state_data");
+        string json;
+        try
+        {
+            json = jsonAsset.text;
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Error reading file: {e.Message}");
+            yield break;
+        }
+
+        string[] gameStates = SplitJsonObjects(json);
+        for (int i = 0; i < gameStates.Length; i++)
+        {
+            string currGS = gameStates[i].Trim();
+            if (string.IsNullOrEmpty(currGS)) continue;
+
+            try
+            {
+                Debug.Log(i + 1);
+                GameState resp = JsonUtility.FromJson<GameState>(currGS);
+                gameController.ProcessGameState(resp);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Error processing game state {i + 1}: {ex.Message}");
+                ShowError($"Error processing game state {i + 1}: {ex.Message}");
+            }
+
+            yield return new WaitForSeconds(0.5f);
+        }
+
+        Debug.Log("Finished processing game states from file.");
+    }
+
+    private IEnumerator InitializeEverything()
+    {
+        FindComponents();
+
+        while (apiManager == null || !IsApiManagerReady())
+            yield return new WaitForSeconds(0.1f);
+
+        Debug.Log("All components ready, initializing UI");
+
+        InitializeUI();
+        ShowJoinRoomPanel(true);
+    }
+
+    private IEnumerator JoinRoomWithDelay(int roomCode)
+    {
+        yield return new WaitForSeconds(0.2f);
+
+        try
+        {
+            apiManager.JoinRoom(roomCode);
+        }
+        catch (System.Exception ex)
+        {
+            Debug.LogError($"Error joining room: {ex.Message}");
+            ShowError("An error occurred while trying to join the room.");
+            SetConnectBtnInteractable(true);
+        }
+    }
+}
+
+[Serializable]
+public class GameState
+{
+    public string sessionId;
+    public string status;
+    public string currentTurnPlayerId;
+    public PlayerStatus[] players;
+}
+
+[Serializable]
+public class PlayerStatus
+{
+    public string id;
+    public string username;
+    public string avatar;
+    public int health;
+    public int maxhealth;
+    public string state;
+    public string attackType = "";
+    public int attackDamage = 0;
+    public int heal = 0;
+    public int bleedingCount = 0;
+    public int bleedingDamage = 0;
+    public int stun = 0;
 }
