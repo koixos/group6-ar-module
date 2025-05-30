@@ -43,12 +43,6 @@ public class MainSceneManager : MonoBehaviour
         if (!arenaPlaced && isGameActive && Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
             PlaceArena(Input.GetTouch(0).position);
 
-        if (Input.GetKeyDown(KeyCode.T))
-        {
-            Vector3 testPos = Camera.main.transform.position + Camera.main.transform.forward * 5f;
-            SimpleDamageManager.Instance.ShowDamage(99, testPos);
-        }
-
         if (isGameActive && arenaPlaced)
             StartGameStateTest();
     }

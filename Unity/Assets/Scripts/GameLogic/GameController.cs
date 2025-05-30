@@ -14,6 +14,7 @@ public class GameController : MonoBehaviour
 
     [SerializeField] private GameObject[] attackPrefabs;
     [SerializeField] private GameObject[] playerPrefabs;
+    [SerializeField] private GameObject damageManagerPrefab;
 
     private readonly Dictionary<string, PlayerController> players = new();
     private GameObject arena;
@@ -22,12 +23,18 @@ public class GameController : MonoBehaviour
     private bool isProcessingAction = false;
     private Queue<GameAction> actionQueue = new Queue<GameAction>();
 
-    /*private void Start()
+    private void Start()
     {
-        StartCoroutine(GameStatePollingRoutine());
+        //StartCoroutine(GameStatePollingRoutine());
+        if (SimpleDamageManager.Instance == null)
+        {
+            GameObject obj = Instantiate(damageManagerPrefab);
+            DontDestroyOnLoad(obj); // Sahne geçiþinde silinmesin
+            Debug.Log("SimpleDamageManager instantiated.");
+        }
     }
 
-    private IEnumerator GameStatePollingRoutine()
+    /*private IEnumerator GameStatePollingRoutine()
     {
         bool isFirstState = true;
         while (true)

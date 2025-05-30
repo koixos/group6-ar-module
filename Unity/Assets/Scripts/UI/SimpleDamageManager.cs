@@ -1,91 +1,95 @@
 using UnityEngine;
 
+public enum DamageType
+{
+    Damage,
+    Heal,
+    Bleed,
+    Stun
+}
+
 public class SimpleDamageManager : MonoBehaviour
 {
-    [SerializeField] private GameObject damageTextPrefab;
+    public static SimpleDamageManager Instance { get; private set; }
 
-    private static SimpleDamageManager instance;
-    public static SimpleDamageManager Instance
-    {
-        get
-        {
-            if (instance == null)
-            {
-                instance = FindObjectOfType<SimpleDamageManager>();
-                if (instance == null)
-                {
-                    GameObject go = new("DamageManager");
-                    instance = go.AddComponent<SimpleDamageManager>();
-                }
-            }
-            return instance;
-        }
-    }
+    [SerializeField] private GameObject floatingDamagePrefab;
+    [SerializeField] private float displayDuration = 1f;
+    [SerializeField] private float floatSpeed = 1f;
+    [SerializeField] private float fadeSpeed = 1f;
 
     private void Awake()
     {
-        if (instance == null)
+        if (Instance == null)
         {
-            instance = this;
+            Instance = this;
             DontDestroyOnLoad(gameObject);
+            Debug.Log("SimpleDamageManager is ready.");
         }
-        else if (instance != this)
+        else
         {
             Destroy(gameObject);
         }
     }
 
-    public void ShowDamage(int damage, Vector3 position, DamageType type = DamageType.Normal)
+    public void ShowDamage(int damage, Vector3 position, DamageType type = DamageType.Damage)
     {
-        Debug.Log($"ShowDamage called: damage={damage}, position={position}");
-
-        if (damageTextPrefab == null)
+        if (floatingDamagePrefab == null)
         {
-            Debug.LogError("Damage text prefab is not assigned!");
+            Debug.LogError("Floating damage prefab is not assigned!");
             return;
         }
 
-        Debug.Log($"Prefab found: {damageTextPrefab.name}");
+        Debug.Log($"Creating damage text: {damage} of type {type} at position {position}");
 
-        Vector3 randomOffset = new(
-            Random.Range(-0.5f, 0.5f),
-            Random.Range(0f, 0.5f),
-            Random.Range(-0.5f, 0.5f)
-        );
+        // Create the damage text object
+        GameObject damageObj = Instantiate(floatingDamagePrefab, position, Quaternion.identity);
 
-        Vector3 spawnPos = position + randomOffset;
-        Debug.Log($"Spawning damage text at: {spawnPos}");
-
-        GameObject damageObj = Instantiate(damageTextPrefab, spawnPos, Quaternion.identity);
-        Debug.Log($"Damage object created: {damageObj.name}");
-
-        if (damageObj.TryGetComponent<SimpleDamageText>(out var damageScript))
+        if (damageObj.TryGetComponent<Canvas>(out var dmgCanvas))
         {
-            Color damageColor = GetDamageColor(type);
-            Debug.Log($"Calling ShowDamage on script with color: {damageColor}");
-            damageScript.ShowDamage(damage, damageColor);
+            dmgCanvas.renderMode = RenderMode.WorldSpace;
+            dmgCanvas.worldCamera = Camera.main;
+        }
+
+        damageObj.transform.LookAt(Camera.main.transform);
+        damageObj.transform.Rotate(0, 180F, 0); // Ensure it faces the camera correctly
+
+        // Get the SimpleDamageText component
+        if (damageObj.TryGetComponent<SimpleDamageText>(out var damageText))
+        {
+            // Set color based on damage type
+            Color textColor = GetColorForDamageType(type);
+            
+            // Add a prefix based on type
+            string prefix = type switch
+            {
+                DamageType.Damage => "-",
+                DamageType.Heal => "+",
+                DamageType.Bleed => "🩸",
+                DamageType.Stun => "⚡",
+                _ => ""
+            };
+            
+            // Show the damage with appropriate color and prefix
+            damageText.ShowDamage(damage, textColor);
+            
+            Debug.Log($"Damage text created successfully: {prefix}{damage}");
         }
         else
         {
-            Debug.LogError("SimpleDamageText component not found on instantiated object!");
+            Debug.LogError("SimpleDamageText component not found on prefab!");
+            Destroy(damageObj);
         }
     }
 
-    private Color GetDamageColor(DamageType type)
+    private Color GetColorForDamageType(DamageType type)
     {
         return type switch
         {
-            DamageType.Normal => Color.red,
-            DamageType.Bleed => Color.yellow,
+            DamageType.Damage => Color.red,
             DamageType.Heal => Color.green,
-            _ => Color.red
+            DamageType.Bleed => new Color(0.8f, 0f, 0f), // Dark red
+            DamageType.Stun => Color.yellow,
+            _ => Color.white
         };
     }
-}
-
-public enum DamageType
-{
-    Normal,
-    Bleed,
-    Heal,
 }

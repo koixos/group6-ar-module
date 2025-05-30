@@ -1,74 +1,41 @@
 using System.Collections;
-using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 
 public class SimpleDamageText : MonoBehaviour
 {
-    [SerializeField] private TextMeshProUGUI damageText;
-    [SerializeField] private float lifetime = 2f;
-    [SerializeField] private float moveSpeed = 3f;
-    [SerializeField] private float scaleAnimation = 1.2f;
+    [SerializeField] private float moveSpeed = 2f;
+    [SerializeField] private float fadeSpeed = 0.5f;
+    [SerializeField] private float scaleMultiplier = 0.01f; // For proper size in world space
+
+    [SerializeField] private TextMeshProUGUI textMesh;
 
     public void ShowDamage(int damage, Color color)
     {
-        Debug.Log($"SimpleDamageText.ShowDamage called: damage={damage}, color={color}");
+        if (textMesh == null) return;
 
-        if (damageText == null)
-        {
-            damageText = GetComponent<TextMeshProUGUI>();
-            if (damageText == null)
-            {
-                Debug.LogError("TextMeshPro component not found!");
-                return;
-            }
-        }
+        Debug.Log($"Showing damage text: {damage} with color: {color}");
 
-        Debug.Log($"TextMeshPro found: {damageText.name}");
-        damageText.text = damage.ToString();
-        damageText.color = color;
-        damageText.fontSize = 8f;
+        // Set text and color
+        textMesh.text = damage.ToString();
+        textMesh.color = color;
 
-        Debug.Log($"Text set to: {damageText.text}, Color: {damageText.color}");
-        if (Camera.main != null)
-        {
-            transform.LookAt(Camera.main.transform);
-            transform.Rotate(0, 180, 0);
-            Debug.Log("Text rotated to face camera");
-        }
-        else
-        {
-            Debug.LogWarning("Main camera not found!");
-        }
-
-        Debug.Log("Starting animation coroutine");
-
-        StartCoroutine(AnimateAndDestroy());
+        // Start animation
+        StartCoroutine(AnimateText());
     }
 
-    private IEnumerator AnimateAndDestroy()
+    private IEnumerator AnimateText()
     {
+        float elapsed = 0f;
         Vector3 startPos = transform.position;
-        Vector3 startScale = transform.localScale;
 
-        float elapsedTime = 0f;
+        if (!TryGetComponent<CanvasGroup>(out var canvasGroup)) canvasGroup = gameObject.AddComponent<CanvasGroup>();
 
-        while (elapsedTime < lifetime)
+        while (elapsed < 1f)
         {
-            float progress = elapsedTime / lifetime;
-
-            transform.position = startPos + Vector3.up * (moveSpeed * elapsedTime);
-
-            float scaleMultiplier = progress < 0.2f ?
-                Mathf.Lerp(1f, scaleAnimation, progress / 0.2f) :
-                Mathf.Lerp(scaleAnimation, 0.8f, (progress - 0.2f) / 0.8f);
-            transform.localScale = startScale * scaleMultiplier;
-
-            Color currentColor = damageText.color;
-            currentColor.a = Mathf.Lerp(1f, 0f, progress);
-            damageText.color = currentColor;
-
-            elapsedTime += Time.deltaTime;
+            transform.position = startPos + Vector3.up * elapsed * 0.5f;
+            canvasGroup.alpha = 1f - elapsed;
+            elapsed += Time.deltaTime;
             yield return null;
         }
 

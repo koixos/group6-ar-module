@@ -53,11 +53,31 @@ public class PlayerController : MonoBehaviour
 
     public void Hurt(int damage)
     {
-        PlayAnimation("hurt");
+        Debug.Log($"[{username}] Taking damage: {damage}");
+        
+        // Update health first
+        int oldHealth = health;
         UpdateHealth(health - damage);
-   
-        Vector3 damagePosition = transform.position + Vector3.up * 2.5f;
-        SimpleDamageManager.Instance.ShowDamage(damage, damagePosition, DamageType.Normal);
+        
+        // Play hurt animation
+        PlayAnimation("hurt");
+        
+        // Show damage amount above the player
+        if (damage >= 0)
+        {
+            // Calculate position above the player's head
+            Vector3 damagePosition = cam.transform.position + Vector3.up * 2f;
+                        
+            if (cam != null)
+            {
+                Vector3 cameraDirection = (cam.transform.position - transform.position).normalized;
+                damagePosition += cameraDirection * 0.5f;
+            }
+            
+            Debug.Log($"[{username}] Showing damage: {damage} at position: {damagePosition}");
+            if (SimpleDamageManager.Instance == null)
+            SimpleDamageManager.Instance?.ShowDamage(damage, damagePosition, DamageType.Damage);
+        }
     }
 
     public void Heal(int amount)
