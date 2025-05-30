@@ -1,9 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using TMPro;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
@@ -34,6 +32,7 @@ public class MainSceneManager : MonoBehaviour
 
     void Start()
     {
+        GetTokenFromIntent();
         StartCoroutine(InitializeEverything());
         ShowJoinRoomPanel(false);
         isGameActive = true;
@@ -44,7 +43,13 @@ public class MainSceneManager : MonoBehaviour
         if (!arenaPlaced && isGameActive && Input.touchCount > 0 && Input.GetTouch(0).phase == TouchPhase.Began)
             PlaceArena(Input.GetTouch(0).position);
 
-        if (arenaPlaced && isGameActive)
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            Vector3 testPos = Camera.main.transform.position + Camera.main.transform.forward * 5f;
+            SimpleDamageManager.Instance.ShowDamage(99, testPos);
+        }
+
+        if (isGameActive && arenaPlaced)
             StartGameStateTest();
     }
 
@@ -68,6 +73,7 @@ public class MainSceneManager : MonoBehaviour
         }
 
         Debug.Log($"Attempting to join room: {roomCode}");
+
         ShowError("");
         SetConnectBtnInteractable(false);
         StartCoroutine(JoinRoomWithDelay(roomCode));
@@ -83,16 +89,37 @@ public class MainSceneManager : MonoBehaviour
         }
     }
 
-    public void ReceiveToken(string token)
-    {
-        this.token = token;
-        Debug.Log("Received token: " + token);
-    }
-
     public void StartGameStateTest()
     {
         StartCoroutine(TestGameStatesFromFile());
         isGameActive = false;
+    }
+
+    public void GetTokenFromIntent()
+    {
+        try
+        {
+            using AndroidJavaClass unityPlayer = new("com.unity3d.player.UnityPlayer");
+            using AndroidJavaObject currentActivity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
+            using AndroidJavaObject intent = currentActivity.Call<AndroidJavaObject>("getIntent");
+            string token = intent.Call<string>("getStringExtra", "user_token");
+            if (!string.IsNullOrEmpty(token))
+            {
+                Debug.Log($"Token received from Intent: {token}");
+                this.token = token;
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogError($"Failed to get token from Intent: {e.Message}");
+        }
+
+    }
+
+    public void ReceiveToken(string token)
+    {
+        this.token = token;
+        Debug.Log("Received token: " + token);
     }
 
     private void InitializeUI()
@@ -143,10 +170,7 @@ public class MainSceneManager : MonoBehaviour
         {
             if (response != null)
             {
-                Debug.Log($"Join room response received with {response.users?.Length ?? 0} users");
-
                 var gameState = ConvertToGameState(response);
-
                 if (gameState != null)
                 {
                     isGameActive = true;
@@ -170,7 +194,7 @@ public class MainSceneManager : MonoBehaviour
                 SetConnectBtnInteractable(true);
             }
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             Debug.LogError($"Error processing join room response: {ex.Message}");
             Debug.LogError($"Stack trace: {ex.StackTrace}");
@@ -192,31 +216,15 @@ public class MainSceneManager : MonoBehaviour
         {
             if (response != null)
             {
-                Debug.Log($"Get State response received with {response.users?.Length ?? 0} users");
-
                 var gameState = ConvertToGameState(response);
-
                 if (gameState != null)
-                {
-                    Debug.Log($"Game status: {JsonUtility.ToJson(gameState, true)}");
                     gameController.ProcessGameState(gameState, false);
-                }
-                else
-                {
-                    ShowError("Failed to convert server response.");
-                }
-            }
-            else
-            {
-                ShowError("Received null response from server.");
-                SetConnectBtnInteractable(true);
             }
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
-            Debug.LogError($"Error processing get state response: {ex.Message}");
-            Debug.LogError($"Stack trace: {ex.StackTrace}");
-            ShowError("An error occurred while processing the response.");
+            Debug.LogError($"Error handling game state update: {ex.Message}");
+            ShowError("Error handling game state update.");
         }
     }
 
@@ -251,11 +259,7 @@ public class MainSceneManager : MonoBehaviour
 
     private void PlaceArena(Vector2 screenPos)
     {
-        if (arenaPrefab == null)
-        {
-            Debug.LogError("Arena prefab not assigned!");
-            return;
-        }
+        if (arenaPrefab == null) return;
 
         if (raycastManager.Raycast(screenPos, hits, TrackableType.PlaneWithinPolygon))
         {
@@ -273,6 +277,19 @@ public class MainSceneManager : MonoBehaviour
         if (gameController != null)
         {
             arenaPlaced = gameController.SetArena(gameArena);
+            if (APIManager.Instance != null)
+            {
+                var currentState = APIManager.Instance.GetCurrentGameState();
+                if (currentState != null)
+                {
+                    Debug.Log("Processing initial game state after arena placement");
+                    gameController.ProcessGameState(currentState, true);
+                }
+                else
+                {
+                    Debug.LogWarning("No current game state available after arena placement");
+                }
+            }
         }
     }
 
@@ -311,9 +328,7 @@ public class MainSceneManager : MonoBehaviour
                 if (c == '{')
                 {
                     if (braceCount == 0)
-                    {
                         startIndex = i;
-                    }
                     braceCount++;
                 }
                 else if (c == '}')
@@ -372,7 +387,7 @@ public class MainSceneManager : MonoBehaviour
 
             return gameState;
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             Debug.LogError($"Error converting to GameState: {ex.Message}");
             return null;
@@ -410,11 +425,11 @@ public class MainSceneManager : MonoBehaviour
             }
             catch (Exception ex)
             {
-                Debug.LogError($"Error processing game state {i + 1}: {ex.Message}");
+                Debug.LogError($"Error processing game state {i + 1}: {ex.Message} - {currGS}");
                 ShowError($"Error processing game state {i + 1}: {ex.Message}");
             }
 
-            yield return new WaitForSeconds(0.5f);
+            yield return new WaitForSeconds(2f);
         }
 
         Debug.Log("Finished processing game states from file.");
@@ -439,9 +454,9 @@ public class MainSceneManager : MonoBehaviour
 
         try
         {
-            apiManager.JoinRoom(roomCode);
+            apiManager.JoinRoom(roomCode, token);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             Debug.LogError($"Error joining room: {ex.Message}");
             ShowError("An error occurred while trying to join the room.");

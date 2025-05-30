@@ -1,4 +1,4 @@
-using System.Linq;
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,21 +7,18 @@ public class PlayerController : MonoBehaviour
 {
     [Header("UI")]
     public GameObject uiCanvasPrefab;
+    [HideInInspector] public UserUI userUI;
 
     private Canvas playerCanvas;
-    private TextMeshProUGUI nameText;
-    private Slider healthBar;
-    private Image healthBarFill;
     private Animator animator;
-    private GameObject currentAttackEffect;
     private Camera cam;
 
-    private string id;
     private string username;
-    private string avatar;
     private int health;
     private int maxHealth;
     private string currAnimTrig = "";
+
+    public int CurrentHealth => health;
 
     void Awake()
     {
@@ -31,10 +28,9 @@ public class PlayerController : MonoBehaviour
 
     void LateUpdate()
     {
-        if (playerCanvas != null && cam != null)
+        if (playerCanvas != null && playerCanvas.renderMode == RenderMode.WorldSpace)
         {
             Vector3 lookDir = cam.transform.position - playerCanvas.transform.position;
-            lookDir.y = 0;
             if (lookDir != Vector3.zero)
                 playerCanvas.transform.rotation = Quaternion.LookRotation(-lookDir);
         }
@@ -42,39 +38,97 @@ public class PlayerController : MonoBehaviour
 
     public void Initialize(string id, string username, string modelName, int health, int maxhealth)
     {
-        this.id = id;
         this.username = username;
-        this.avatar = modelName;
         this.health = health;
         this.maxHealth = maxhealth;
 
         CreatePlayerUI();
-        UpdateUI();
+        SetupUI();
     }
 
     public void Attack(string attackName)
     {
         PlayAnimation("attack");
-
-        /*if (currentAttackEffect != null) Destroy(currentAttackEffect);
-        GameObject attackPrefab = Resources.Load<GameObject>($"Attacks/{attackName}");
-        if (attackPrefab == null) return;
-        Vector3 attackPosition = transform.position + transform.forward * 2f;
-        currentAttackEffect = Instantiate(attackPrefab, attackPosition, transform.rotation);
-        //currentAttackEffect.transform.LookAt(transform.position - transform.forward * 10f);
-        Destroy(currentAttackEffect, 2f);*/
     }
 
     public void Hurt(int damage)
     {
-        SetHealth(health - damage);
         PlayAnimation("hurt");
-        //ShowDamageAmount(damage);
+        UpdateHealth(health - damage);
+   
+        Vector3 damagePosition = transform.position + Vector3.up * 2.5f;
+        SimpleDamageManager.Instance.ShowDamage(damage, damagePosition, DamageType.Normal);
+    }
+
+    public void Heal(int amount)
+    {
+        UpdateHealth(health + amount);
+        Vector3 healPosition = transform.position + Vector3.up * 2.5f;
+        SimpleDamageManager.Instance.ShowDamage(amount, healPosition, DamageType.Heal);
     }
 
     public void UpdateHealth(int newHealth)
     {
         SetHealth(newHealth);
+        if (userUI != null && userUI.healthBar != null)
+        {
+            userUI.healthBar.value = health;
+            UpdateHealthBarColor();
+        }
+    }
+
+    public void ShowBleed(int turns, int dmg)
+    {
+        if (userUI != null && userUI.iconBleed != null)
+        {
+            if (userUI.iconBleed.TryGetComponent<IconSetup>(out var iconSetup))
+                iconSetup.ShowInfo($"{turns}/-{dmg}");
+        }
+    }
+
+    public void HideBleed()
+    {
+        if (userUI != null && userUI.iconBleed != null)
+        {
+            if (userUI.iconBleed.TryGetComponent<IconSetup>(out var iconSetup))
+                iconSetup.HideInfo();
+        }
+    }
+
+    public void ShowHeal(int amount)
+    {
+        if (userUI != null && userUI.iconHeal != null)
+        {
+            if (userUI.iconHeal.TryGetComponent<IconSetup>(out var iconSetup))
+                iconSetup.ShowInfo($"+{amount}");
+        }
+    }
+
+    public void HideHeal()
+    {
+        if (userUI != null && userUI.iconHeal != null)
+        {
+            if (userUI.iconHeal.TryGetComponent<IconSetup>(out var iconSetup))
+                iconSetup.HideInfo();
+        }
+    }
+
+    public void ShowStun(int turns)
+    {
+        if (userUI != null && userUI.iconStun != null)
+        {
+            if (userUI.iconStun.TryGetComponent<IconSetup>(out var iconSetup))
+                iconSetup.ShowInfo($"{turns}");
+        }
+    }
+
+    public void HideStun()
+    {
+        if (userUI != null && userUI.iconStun != null)
+        {
+            if (userUI.iconStun.TryGetComponent<IconSetup>(out var iconSetup))
+                iconSetup.HideInfo();
+        }
     }
 
     public void PlayIdleAnimation() => PlayAnimation("idle");
@@ -86,200 +140,187 @@ public class PlayerController : MonoBehaviour
         if (Camera.main != null) return Camera.main;
         var arCam = FindObjectOfType<UnityEngine.XR.ARFoundation.ARCameraManager>();
         if (arCam != null) return arCam.GetComponent<Camera>();
-        Debug.LogWarning("No AR camera found, using default camera.");
+        Debug.LogWarning("No AR camera found");
         return null;
     }
 
     private void CreatePlayerUI()
     {
+        Debug.Log($"[{username}] Starting CreatePlayerUI");
         if (uiCanvasPrefab != null)
         {
-            Debug.Log($"[{username}] Using prefab UI");
-
             GameObject canvasObj = Instantiate(uiCanvasPrefab, transform);
-            canvasObj.transform.SetParent(transform);
-            canvasObj.transform.SetLocalPositionAndRotation(Vector3.zero, Quaternion.identity);
-            canvasObj.transform.localScale = Vector3.one;
+            Debug.Log($"[{username}] Canvas instantiated: {canvasObj.name}");
+            
+            canvasObj.transform.SetLocalPositionAndRotation(new(0f, 2.3f, 0f), Quaternion.identity);
+            canvasObj.transform.localScale = Vector3.one * 0.01f;
 
             playerCanvas = canvasObj.GetComponent<Canvas>();
             if (playerCanvas != null)
             {
                 playerCanvas.renderMode = RenderMode.WorldSpace;
                 playerCanvas.worldCamera = cam;
-
-                if (playerCanvas.TryGetComponent<CanvasScaler>(out var scaler))
-                    scaler.enabled = false;
-            
-                if (playerCanvas.TryGetComponent<RectTransform>(out var rectTransform))
-                    rectTransform.sizeDelta = new Vector2(3f, 2f);
+                Debug.Log($"[{username}] Canvas setup complete");
             }
 
-            SetupUIReferences();
+            userUI = canvasObj.GetComponent<UserUI>();
+            if (userUI == null)
+            {
+                Debug.LogError($"[{username}] UserUI component not found on instantiated canvas!");
+                return;
+            }
+
+            if (userUI.iconRow != null)
+            {
+                var rectTransform = userUI.iconRow.GetComponent<RectTransform>();
+                Debug.Log($"[{username}] IconRow RectTransform:" +
+                    $"\nSize: {rectTransform.sizeDelta}" +
+                    $"\nScale: {rectTransform.localScale}" +
+                    $"\nPosition: {rectTransform.localPosition}" +
+                    $"\nPivot: {rectTransform.pivot}");
+
+                CheckIconVisuals(userUI.iconHeal, "Heal");
+                CheckIconVisuals(userUI.iconBleed, "Bleed");
+                CheckIconVisuals(userUI.iconStun, "Stun");
+            }
+
+            if (userUI.iconRow != null)
+            {
+                userUI.iconRow.SetActive(true);
+                var hlg = userUI.iconRow.GetComponent<HorizontalLayoutGroup>();
+                if (hlg != null)
+                {
+                    Debug.Log($"[{username}] HorizontalLayoutGroup properties:" +
+                        $"\nSpacing: {hlg.spacing}" +
+                        $"\nPadding: L{hlg.padding.left} R{hlg.padding.right} T{hlg.padding.top} B{hlg.padding.bottom}" +
+                        $"\nChild Alignment: {hlg.childAlignment}");
+                }
+                else
+                {
+                    Debug.LogWarning($"[{username}] No HorizontalLayoutGroup found on IconRow!");
+                }
+            }
         }
         else
         {
-            GameObject canvasObj = new("PlayerCanvas");
-            canvasObj.transform.SetParent(transform);
-
-            playerCanvas = canvasObj.AddComponent<Canvas>();
-            playerCanvas.renderMode = RenderMode.WorldSpace;
-            playerCanvas.worldCamera = cam;
-
-            RectTransform canvasRect = playerCanvas.GetComponent<RectTransform>();
-            canvasRect.sizeDelta = new Vector2(3f, 2f);
-
-            CreateUIElements(canvasObj);
-        }
-
-        PositionUI();
-
-        Debug.Log($"[{username}] UI Validation:");
-        Debug.Log($"  - Canvas: {(playerCanvas != null ? "OK" : "MISSING")}");
-        Debug.Log($"  - NameText: {(nameText != null ? nameText.text : "MISSING")}");
-        Debug.Log($"  - HealthBar: {(healthBar != null ? $"Value: {healthBar.value}/{healthBar.maxValue}" : "MISSING")}");
-
-        if (playerCanvas != null)
-        {
-            Debug.Log($"  - Canvas Size: {playerCanvas.GetComponent<RectTransform>().sizeDelta}");
-            Debug.Log($"  - Canvas Scale: {playerCanvas.transform.localScale}");
-            Debug.Log($"  - Canvas Position: {playerCanvas.transform.localPosition}");
+            Debug.LogError($"[{username}] No uiCanvasPrefab assigned!");
         }
     }
 
-    private void CreateUIElements(GameObject canvasObj)
+    private void CheckIconVisuals(GameObject icon, string iconName)
     {
-        GameObject nameObj = new("UserName");
-        nameObj.transform.SetParent(canvasObj.transform);
+        if (icon == null) return;
 
-        nameText = nameObj.AddComponent<TextMeshProUGUI>();
-        nameText.text = username;
-        nameText.fontSize = 0.5f;
-        nameText.color = Color.white;
-        nameText.alignment = TextAlignmentOptions.Center;
+        var rectTransform = icon.GetComponent<RectTransform>();
+        var image = icon.GetComponentInChildren<Image>();
+        var text = icon.GetComponentInChildren<TextMeshProUGUI>();
 
-        RectTransform nameRect = nameText.GetComponent<RectTransform>();
-        nameRect.sizeDelta = new Vector2(2.5f, 0.6f);
-        nameRect.anchoredPosition = new Vector2(0, 0.8f);
-
-        Debug.Log($"[{username}] Username text created: '{nameText.text}', fontSize: {nameText.fontSize}");
-
-        GameObject healthBGObj = new("HealthBar");
-        healthBGObj.transform.SetParent(canvasObj.transform);
-
-        Image healthBG = healthBGObj.AddComponent<Image>();
-        healthBG.color = new(0.2f, 0.2f, 0.2f, 0.8f);
-
-        RectTransform healthBGRect = healthBG.GetComponent<RectTransform>();
-        healthBGRect.sizeDelta = new Vector2(2f, 0.3f);
-        healthBGRect.anchoredPosition = new Vector2(0, 0.2f);
-
-        GameObject healthFillObj = new("HealthBarFill");
-        healthFillObj.transform.SetParent(healthBGObj.transform);
-
-        healthBarFill = healthFillObj.AddComponent<Image>();
-        healthBarFill.color = Color.green;
-
-        RectTransform healthFillRect = healthBarFill.GetComponent<RectTransform>();
-        healthFillRect.anchoredPosition = new Vector2(0, 0);
-        healthFillRect.sizeDelta = new Vector2(0, 0);
-        healthFillRect.anchorMin = new Vector2(0, 0);
-        healthFillRect.anchorMax = new Vector2(1, 1);
-        healthFillRect.offsetMin = new Vector2(0, 0);
-        healthFillRect.offsetMax = new Vector2(0, 0);
-
-        healthBar = healthBGObj.AddComponent<Slider>();
-        healthBar.fillRect = healthFillRect;
-        healthBar.minValue = 0;
-        healthBar.maxValue = maxHealth;
-        healthBar.value = health;
-        healthBar.interactable = false;
-
-        Debug.Log($"[{username}] Health bar created: {health}/{maxHealth}");
+        Debug.Log($"[{username}] {iconName} Icon properties:" +
+            $"\nRectTransform - Size: {rectTransform.sizeDelta}, Scale: {rectTransform.localScale}" +
+            $"\nImage - {(image != null ? $"Sprite: {(image.sprite != null ? image.sprite.name : "NULL")}, Color: {image.color}" : "No Image component")}" +
+            $"\nText - {(text != null ? $"Text: {text.text}, Size: {text.fontSize}, Color: {text.color}" : "No Text component")}");
     }
 
-    private void SetupUIReferences()
+    private void SetupUI()
     {
-        if (playerCanvas == null) return;
-
-        for (int i = 0; i < playerCanvas.transform.childCount; i++)
-        {
-            Transform child = playerCanvas.transform.GetChild(i);
-            Debug.Log($"[{username}] Child {i}: {child.name} - Components: {string.Join(", ", child.GetComponents<Component>().Select(c => c.GetType().Name))}");
-        }
-
-        nameText = playerCanvas.GetComponentInChildren<TextMeshProUGUI>();
-        healthBar = playerCanvas.GetComponentInChildren<Slider>();
+        Debug.Log($"[{username}] Starting SetupUI");
         
-        if (healthBar.fillRect != null)
-            healthBarFill = healthBar.fillRect.GetComponent<Image>();
-
-        Transform usernameObj = playerCanvas.transform.Find("UserName");
-        if (usernameObj != null)
+        if (uiCanvasPrefab == null)
         {
-            if (usernameObj.TryGetComponent<TextMeshProUGUI>(out var manualText))
+            Debug.LogError($"[{username}] uiCanvasPrefab is not assigned in the Unity Inspector!");
+            return;
+        }
+
+        if (userUI == null)
+        {
+            Debug.LogError($"[{username}] userUI is null. Make sure the UserUI component is attached to the uiCanvasPrefab!");
+            return;
+        }
+
+        try
+        {
+            if (userUI.nameText != null)
             {
-                nameText = manualText;
-                Debug.Log($"[{username}] NameText set manually: '{nameText.text}'");
+                userUI.nameText.text = username;
+                Debug.Log($"[{username}] Username set");
+            }
+            else
+            {
+                Debug.LogWarning($"[{username}] nameText is null in UserUI");
+            }
+
+            if (userUI.healthBar != null)
+            {
+                userUI.healthBar.interactable = false;
+                userUI.healthBar.maxValue = maxHealth;
+                userUI.healthBar.value = health;
+                userUI.healthBar.gameObject.SetActive(true);
+                UpdateHealthBarColor();
+                Debug.Log($"[{username}] Health bar setup complete");
+            }
+            else
+            {
+                Debug.LogWarning($"[{username}] healthBar is null in UserUI");
+            }
+
+            if (userUI.iconRow != null)
+            {
+                userUI.iconRow.SetActive(true);
+                if (userUI.iconHeal != null) userUI.iconHeal.SetActive(false);
+                if (userUI.iconBleed != null) userUI.iconBleed.SetActive(false);
+                if (userUI.iconStun != null) userUI.iconStun.SetActive(false);
+                Debug.Log($"[{username}] Icon row setup complete. Position: {userUI.iconRow.transform.localPosition}");
+            }
+            else
+            {
+                Debug.LogError($"[{username}] iconRow is null in UserUI - Icons won't be displayed!");
             }
         }
-        else
+        catch (System.Exception e)
         {
-            Debug.LogWarning($"[{username}] No 'Username' object found");
-        }
-
-        Transform healthObj = playerCanvas.transform.Find("HealthBar");
-        if (healthObj != null)
-        {
-            Debug.Log($"[{username}] Found HealthBar object by name");
-            if (healthObj.TryGetComponent<Slider>(out var manualSlider))
-            {
-                healthBar = manualSlider;
-                Debug.Log($"[{username}] HealthBar set manually");
-            }
-        }
-        else
-        {
-            Debug.LogWarning($"[{username}] No 'HealthBar' object found");
-        }
-    }
-
-    private void PositionUI()
-    {
-        if (playerCanvas != null)
-        {
-            playerCanvas.transform.SetLocalPositionAndRotation(new Vector3(0, 2.5f, 0), Quaternion.identity);
-            playerCanvas.transform.localScale = Vector3.one;
-        }
-    }
-
-    private void UpdateUI()
-    {
-        if (nameText != null) 
-            nameText.text = username;
-        if (healthBar != null)
-        {
-            healthBar.maxValue = maxHealth;
-            healthBar.value = health;
-            UpdateHealthBarColor();
+            Debug.LogError($"[{username}] Error in SetupUI: {e.Message}\n{e.StackTrace}");
         }
     }
 
     private void UpdateHealthBarColor()
     {
-        if (healthBarFill == null) return;
+        if (userUI == null || userUI.healthBarFill == null) return;
+
         float percentage = (float)health / maxHealth;
+        Color newColor;
+
         if (percentage > 0.6f)
-            healthBarFill.color = Color.green;
+            newColor = Color.green;
         else if (percentage > 0.3f)
-            healthBarFill.color = Color.yellow;
+            newColor = Color.yellow;
         else
-            healthBarFill.color = Color.red;
+            newColor = Color.red;
+
+        StartCoroutine(LerpHealthBarColor(newColor));
+    }
+
+    private IEnumerator LerpHealthBarColor(Color targetColor)
+    {
+        if (userUI == null || userUI.healthBarFill == null) yield break;
+
+        Color startColor = userUI.healthBarFill.color;
+        float elapsedTime = 0f;
+        float duration = 0.3f;
+
+        while (elapsedTime < duration)
+        {
+            elapsedTime += Time.deltaTime;
+            userUI.healthBarFill.color = Color.Lerp(startColor, targetColor, elapsedTime / duration);
+            yield return null;
+        }
+
+        userUI.healthBarFill.color = targetColor;
     }
 
     private void SetHealth(int newHealth)
     {
         health = Mathf.Clamp(newHealth, 0, maxHealth);
-        UpdateUI();
+        Debug.Log($"[{username}] Health updated: {health}/{maxHealth}");
     }
 
     private void PlayAnimation(string trigger)
@@ -290,18 +331,15 @@ public class PlayerController : MonoBehaviour
         ResetAllTriggers();
         animator.SetTrigger(trigger);
         currAnimTrig = trigger;
+        Debug.Log($"[{username}] Playing animation: {trigger}");
     }
 
     private void ResetAllTriggers()
     {
         if (animator == null) return;
-
-        string[] triggers = { "idle", "attack", "hurt", "victory", "defeat", "heal", "bleed", "stun" };
-        foreach (string trigger in triggers)
-        {
-            animator.ResetTrigger(trigger);
-        }
-
+        foreach (var param in animator.parameters)
+            if (param.type == AnimatorControllerParameterType.Trigger)
+                animator.ResetTrigger(param.name);
         currAnimTrig = "";
     }
 

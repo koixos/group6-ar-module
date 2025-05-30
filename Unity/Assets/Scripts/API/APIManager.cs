@@ -5,10 +5,13 @@ using UnityEngine.Networking;
 
 public class APIManager : MonoBehaviour
 {
+    public static APIManager Instance { get; private set; }
+
     [Header("API Configuration")]
     public string baseUrl = "http://192.168.137.1:3001/api/ar";
     private string sessionId;
-    private string authToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2ODFhMDY0NjcxNmEzOGI0MDkyZmUzMDciLCJpYXQiOjE3NDg0MzM5NTUsImV4cCI6MTc0ODQzNzU1NX0.2NlDNGV9WNB6u9u_XmTNseQedhnq2KzVXgUPdWPpurU";
+    private string authToken;
+    private GameState currentGameState;
 
     private Coroutine joinRoomCoroutine;
     private bool isJoiningRoom = false;
@@ -17,36 +20,120 @@ public class APIManager : MonoBehaviour
     public event Action<ServerResponse> OnGameStateUpdated;
     public event Action<string> OnError;
 
-    void OnDestroy()
+    void Awake()
     {
-        StopGameStateUpdates();
-        if (!string.IsNullOrEmpty(authToken))
-            StartCoroutine(LeaveRoomCoroutine());
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
     }
 
-    public void JoinRoom(int code)
+    void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
+            StopGameStateUpdates();
+            if (!string.IsNullOrEmpty(authToken))
+                StartCoroutine(LeaveRoomCoroutine());
+        }
+    }
+
+    public GameState GetCurrentGameState()
+    {
+        return currentGameState;
+    }
+
+    private void HandleGameStateUpdate(ServerResponse response)
+    {
+        if (response != null)
+        {
+            try
+            {
+                currentGameState = ConvertToGameState(response);
+                if (currentGameState != null)
+                {
+                    Debug.Log($"Game state updated - Status: {currentGameState.status}, Players: {currentGameState.players?.Length ?? 0}");
+                    foreach (var player in currentGameState.players ?? new PlayerStatus[0])
+                    {
+                        Debug.Log($"Player {player.username}: Health={player.health}/{player.maxhealth}, State={player.state}, Attack={player.attackType}");
+                    }
+                }
+                OnGameStateUpdated?.Invoke(response);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError($"Error in HandleGameStateUpdate: {ex.Message}");
+            }
+        }
+    }
+
+    private GameState ConvertToGameState(ServerResponse response)
+    {
+        try
+        {
+            GameState gameState = new()
+            {
+                sessionId = response._id,
+                status = response.gameStatus,
+                currentTurnPlayerId = response.currentTurnCharacterId
+            };
+
+            if (response.users != null)
+            {
+                gameState.players = new PlayerStatus[response.users.Length];
+                for (int i = 0; i < response.users.Length; i++)
+                {
+                    var user = response.users[i];
+                    gameState.players[i] = new PlayerStatus
+                    {
+                        id = user._id,
+                        username = user.characterName,
+                        avatar = user.avatar,
+                        maxhealth = user.maxHealth,
+                        health = user.characterState?.health ?? user.maxHealth,
+                        state = user.characterState?.state ?? "idle",
+                        attackType = user.characterState?.attackAction ?? "",
+                        attackDamage = user.characterState?.attackDamage ?? 0,
+                        heal = user.characterState?.heal ?? 0,
+                        bleedingCount = user.characterState?.bleedingCount ?? 0,
+                        bleedingDamage = user.characterState?.bleedingDamage ?? 0,
+                        stun = user.characterState?.stun ?? 0
+                    };
+                }
+            }
+            else
+            {
+                gameState.players = new PlayerStatus[0];
+            }
+
+            return gameState;
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Error converting to GameState: {ex.Message}");
+            return null;
+        }
+    }
+
+    public void JoinRoom(int code, string token)
     {
         if (isJoiningRoom) return;
         if (joinRoomCoroutine != null) StopCoroutine(joinRoomCoroutine);
         isJoiningRoom = true;
+        if (string.IsNullOrEmpty(token)) return;
+        authToken = token;
         joinRoomCoroutine = StartCoroutine(JoinRoomCoroutine(code));
     }
 
     public void StartSpectating()
     {
         StartCoroutine(GameStateUpdateCoroutine(2f));
-    }
-
-    public void GetCurrentGameState()
-    {
-        if (string.IsNullOrEmpty(authToken))
-        {
-            Debug.LogError("Auth token is not set. Cannot fetch game state.");
-            OnError?.Invoke("Auth token is not set. Cannot fetch game state.");
-            return;
-        }
-
-        StartCoroutine(GetGameStateCoroutine());
     }
 
     public void ClearAuth()
@@ -83,7 +170,7 @@ public class APIManager : MonoBehaviour
         string jsonData = JsonUtility.ToJson(requestData);
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonData);
         string url = $"{baseUrl}/room/{code}/add-spectator";
-
+        
         using UnityWebRequest www = new(url, "POST");
         www.uploadHandler = new UploadHandlerRaw(bodyRaw);
         www.downloadHandler = new DownloadHandlerBuffer();
@@ -146,7 +233,7 @@ public class APIManager : MonoBehaviour
                 string rawResponse = www.downloadHandler.text;
                 Debug.Log($"Getting state of {url} - raw response: {rawResponse}");
                 ServerResponse response = JsonUtility.FromJson<ServerResponse>(rawResponse);
-                OnGameStateUpdated?.Invoke(response);
+                HandleGameStateUpdate(response);
             }
             catch (Exception ex)
             {

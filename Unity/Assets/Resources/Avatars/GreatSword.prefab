@@ -81,4 +81,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d7e2141f0a33b91488a79edfa10dabb7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  uiCanvasPrefab: {fileID: 8713865436491419755, guid: 96c5718574c148045a6b16619792dac0, type: 3}
+  uiCanvasPrefab: {fileID: 8762355828932323380, guid: 9e29487ba8eb03c448be46c7272066c5, type: 3}
+  userUI: {fileID: 0}
