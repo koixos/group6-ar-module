@@ -412,6 +412,8 @@ public class MainSceneManager : MonoBehaviour
             {
                 Debug.Log(i + 1);
                 GameState resp = JsonUtility.FromJson<GameState>(currGS);
+                Debug.Log(resp.players[0].attackDamage);
+                Debug.Log(resp.players[1].attackDamage);
                 if (i == 0)
                     gameController.ProcessGameState(resp, true);
                 else

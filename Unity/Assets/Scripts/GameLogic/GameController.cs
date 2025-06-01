@@ -100,6 +100,8 @@ public class GameController : MonoBehaviour
                     Damage = player.attackDamage,
                     Health = player.health
                 });
+
+                Debug.Log(player.attackDamage);
             }
         }
 
@@ -150,7 +152,7 @@ public class GameController : MonoBehaviour
                         break;
                 }
 
-                yield return new WaitForSeconds(0.2f);
+                yield return new WaitForSeconds(2f);
             }
         }
 

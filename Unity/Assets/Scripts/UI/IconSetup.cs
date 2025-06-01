@@ -5,23 +5,40 @@ using TMPro;
 [ExecuteInEditMode]
 public class IconSetup : MonoBehaviour
 {
+    [Header("Icon Settings")]
     public Sprite iconSprite;
     public Color iconColor = Color.white;
-    public float iconSize = 40f;
-    public float backgroundSize = 30f;
-    public float fontSize = 24f;
-    
+    public float iconSize = 80f;
+
+    [Header("Info Badge Settings")]
+    public float backgroundSize = 40f;
+    public float fontSize = 20f;
+    public Color backgroundColor = new Color(1f, 1f, 1f, 0.9f);
+    public Color textColor = Color.black;
+
     private TextMeshProUGUI _infoText;
+    private GameObject _infoObject;
+
     public TextMeshProUGUI InfoText => _infoText;
+
+    void Start()
+    {
+        if (Application.isPlaying)
+        {
+            SetupIcon();
+        }
+    }
 
     void OnValidate()
     {
-        SetupIcon();
+        if (!Application.isPlaying)
+        {
+            SetupIcon();
+        }
     }
 
     void SetupIcon()
     {
-        // Setup main icon
         var iconObj = transform.Find("Icon")?.gameObject;
         if (iconObj == null)
         {
@@ -31,97 +48,150 @@ public class IconSetup : MonoBehaviour
 
         var iconImage = iconObj.GetComponent<Image>();
         if (iconImage == null) iconImage = iconObj.AddComponent<Image>();
-        
+
         iconImage.sprite = iconSprite;
         iconImage.color = iconColor;
         iconImage.preserveAspect = true;
+        iconImage.raycastTarget = false; // Performance için
 
         var iconRect = iconObj.GetComponent<RectTransform>();
+        if (iconRect == null) iconRect = iconObj.AddComponent<RectTransform>();
+
         iconRect.sizeDelta = new Vector2(iconSize, iconSize);
+        iconRect.anchorMin = new Vector2(0.5f, 0.5f);
+        iconRect.anchorMax = new Vector2(0.5f, 0.5f);
+        iconRect.pivot = new Vector2(0.5f, 0.5f);
         iconRect.anchoredPosition = Vector2.zero;
 
-        // Setup info container (position it at top-right of icon)
-        var infoObj = transform.Find("Info")?.gameObject;
-        if (infoObj == null)
+        _infoObject = transform.Find("Info")?.gameObject;
+        if (_infoObject == null)
         {
-            infoObj = new GameObject("Info");
-            infoObj.transform.SetParent(transform, false);
+            _infoObject = new GameObject("Info");
+            _infoObject.transform.SetParent(transform, false);
         }
 
-        var infoRect = infoObj.GetComponent<RectTransform>();
-        if (infoRect == null) infoRect = infoObj.AddComponent<RectTransform>();
-        
-        // Position Info at top-right corner of the icon
-        infoRect.sizeDelta = new Vector2(backgroundSize, backgroundSize);
-        infoRect.anchorMin = new Vector2(1, 1);  // Top-right anchor
-        infoRect.anchorMax = new Vector2(1, 1);
-        infoRect.pivot = new Vector2(0, 0);      // Pivot at bottom-left of Info
-        infoRect.anchoredPosition = new Vector2(-5, -5);  // Slight offset from corner
+        var infoRect = _infoObject.GetComponent<RectTransform>();
+        if (infoRect == null) infoRect = _infoObject.AddComponent<RectTransform>();
 
-        // Setup background circle
-        var bgObj = infoObj.transform.Find("Background")?.gameObject;
+        // Info badge'i sað üst köþeye yerleþtir
+        infoRect.sizeDelta = new Vector2(backgroundSize, backgroundSize);
+        infoRect.anchorMin = new Vector2(1f, 1f);
+        infoRect.anchorMax = new Vector2(1f, 1f);
+        infoRect.pivot = new Vector2(0.5f, 0.5f);
+        infoRect.anchoredPosition = new Vector2(-backgroundSize * 0.3f, -backgroundSize * 0.3f);
+
+        // Background circle
+        SetupBackground();
+
+        // Text
+        SetupText();
+
+        // Baþlangýçta gizli
+        _infoObject.SetActive(false);
+
+        var myRect = GetComponent<RectTransform>();
+        if (myRect == null) myRect = gameObject.AddComponent<RectTransform>();
+
+        myRect.sizeDelta = new Vector2(iconSize, iconSize);
+
+        // Layout Group için gerekli component'ler
+        var layoutElement = GetComponent<LayoutElement>();
+        if (layoutElement == null) layoutElement = gameObject.AddComponent<LayoutElement>();
+
+        layoutElement.preferredWidth = iconSize;
+        layoutElement.preferredHeight = iconSize;
+    }
+
+    private void SetupBackground()
+    {
+        var bgObj = _infoObject.transform.Find("Background")?.gameObject;
         if (bgObj == null)
         {
             bgObj = new GameObject("Background");
-            bgObj.transform.SetParent(infoObj.transform, false);
+            bgObj.transform.SetParent(_infoObject.transform, false);
         }
 
         var bgImage = bgObj.GetComponent<Image>();
         if (bgImage == null) bgImage = bgObj.AddComponent<Image>();
-        
-        bgImage.color = new Color(1f, 1f, 1f, 0.8f);
+
+        bgImage.color = backgroundColor;
+        bgImage.raycastTarget = false;
+
+        // Daire þekli için sprite
         bgImage.sprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/Knob.psd");
+        if (bgImage.sprite == null)
+        {
+            // Fallback: Varsayýlan UI sprite
+            bgImage.sprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/UISprite.psd");
+        }
 
         var bgRect = bgObj.GetComponent<RectTransform>();
+        if (bgRect == null) bgRect = bgObj.AddComponent<RectTransform>();
+
         bgRect.anchorMin = Vector2.zero;
         bgRect.anchorMax = Vector2.one;
         bgRect.sizeDelta = Vector2.zero;
         bgRect.anchoredPosition = Vector2.zero;
+    }
 
-        // Setup text
-        var textObj = infoObj.transform.Find("Text")?.gameObject;
+    private void SetupText()
+    {
+        var textObj = _infoObject.transform.Find("Text")?.gameObject;
         if (textObj == null)
         {
             textObj = new GameObject("Text");
-            textObj.transform.SetParent(infoObj.transform, false);
+            textObj.transform.SetParent(_infoObject.transform, false);
         }
 
         _infoText = textObj.GetComponent<TextMeshProUGUI>();
         if (_infoText == null) _infoText = textObj.AddComponent<TextMeshProUGUI>();
-        
+
         _infoText.fontSize = fontSize;
         _infoText.alignment = TextAlignmentOptions.Center;
-        _infoText.color = Color.black;
-        _infoText.text = "";  // Clear default text
+        _infoText.color = textColor;
+        _infoText.text = "";
+        _infoText.raycastTarget = false; // Performance için
+        _infoText.fontStyle = FontStyles.Bold; // Daha belirgin
+
+        // Auto size ayarlarý
+        _infoText.enableAutoSizing = true;
+        _infoText.fontSizeMin = fontSize * 0.5f;
+        _infoText.fontSizeMax = fontSize;
 
         var textRect = textObj.GetComponent<RectTransform>();
+        if (textRect == null) textRect = textObj.AddComponent<RectTransform>();
+
         textRect.anchorMin = Vector2.zero;
         textRect.anchorMax = Vector2.one;
         textRect.sizeDelta = Vector2.zero;
         textRect.anchoredPosition = Vector2.zero;
 
-        // Ensure this icon has correct RectTransform
-        var myRect = GetComponent<RectTransform>();
-        myRect.sizeDelta = new Vector2(80f, 80f);
-
-        // Set Info object inactive by default
-        infoObj.SetActive(false);
+        // Padding ekle
+        textRect.offsetMin = new Vector2(2, 2);
+        textRect.offsetMax = new Vector2(-2, -2);
     }
 
     public void ShowInfo(string text)
     {
-        if (_infoText != null)
+        if (_infoText != null && _infoObject != null)
         {
             _infoText.text = text;
-            _infoText.transform.parent.gameObject.SetActive(true);
+            _infoObject.SetActive(true);
+
+            Debug.Log($"Showing info on {gameObject.name}: '{text}'");
+        }
+        else
+        {
+            Debug.LogError($"Cannot show info on {gameObject.name} - components missing!");
         }
     }
 
     public void HideInfo()
     {
-        if (_infoText != null)
+        if (_infoObject != null)
         {
-            _infoText.transform.parent.gameObject.SetActive(false);
+            _infoObject.SetActive(false);
+            Debug.Log($"Hiding info on {gameObject.name}");
         }
     }
 } 

@@ -54,19 +54,13 @@ public class PlayerController : MonoBehaviour
     public void Hurt(int damage)
     {
         Debug.Log($"[{username}] Taking damage: {damage}");
-        
-        // Update health first
         int oldHealth = health;
         UpdateHealth(health - damage);
-        
-        // Play hurt animation
         PlayAnimation("hurt");
         
-        // Show damage amount above the player
         if (damage >= 0)
         {
-            // Calculate position above the player's head
-            Vector3 damagePosition = cam.transform.position + Vector3.up * 2f;
+            Vector3 damagePosition = transform.position + Vector3.up * 2.5f;
                         
             if (cam != null)
             {
@@ -75,7 +69,6 @@ public class PlayerController : MonoBehaviour
             }
             
             Debug.Log($"[{username}] Showing damage: {damage} at position: {damagePosition}");
-            if (SimpleDamageManager.Instance == null)
             SimpleDamageManager.Instance?.ShowDamage(damage, damagePosition, DamageType.Damage);
         }
     }
@@ -101,6 +94,7 @@ public class PlayerController : MonoBehaviour
     {
         if (userUI != null && userUI.iconBleed != null)
         {
+            userUI.iconBleed.SetActive(true);
             if (userUI.iconBleed.TryGetComponent<IconSetup>(out var iconSetup))
                 iconSetup.ShowInfo($"{turns}/-{dmg}");
         }
@@ -110,6 +104,7 @@ public class PlayerController : MonoBehaviour
     {
         if (userUI != null && userUI.iconBleed != null)
         {
+            userUI.iconBleed.SetActive(false);
             if (userUI.iconBleed.TryGetComponent<IconSetup>(out var iconSetup))
                 iconSetup.HideInfo();
         }
@@ -119,6 +114,7 @@ public class PlayerController : MonoBehaviour
     {
         if (userUI != null && userUI.iconHeal != null)
         {
+            userUI.iconHeal.SetActive(true);
             if (userUI.iconHeal.TryGetComponent<IconSetup>(out var iconSetup))
                 iconSetup.ShowInfo($"+{amount}");
         }
@@ -128,6 +124,7 @@ public class PlayerController : MonoBehaviour
     {
         if (userUI != null && userUI.iconHeal != null)
         {
+            userUI.iconHeal.SetActive(false);
             if (userUI.iconHeal.TryGetComponent<IconSetup>(out var iconSetup))
                 iconSetup.HideInfo();
         }
@@ -137,6 +134,7 @@ public class PlayerController : MonoBehaviour
     {
         if (userUI != null && userUI.iconStun != null)
         {
+            userUI.iconStun.SetActive(true);
             if (userUI.iconStun.TryGetComponent<IconSetup>(out var iconSetup))
                 iconSetup.ShowInfo($"{turns}");
         }
@@ -146,6 +144,7 @@ public class PlayerController : MonoBehaviour
     {
         if (userUI != null && userUI.iconStun != null)
         {
+            userUI.iconStun.SetActive(false);
             if (userUI.iconStun.TryGetComponent<IconSetup>(out var iconSetup))
                 iconSetup.HideInfo();
         }
@@ -183,6 +182,19 @@ public class PlayerController : MonoBehaviour
                 Debug.Log($"[{username}] Canvas setup complete");
             }
 
+            if (canvasObj.GetComponent<CanvasScaler>() == null)
+            {
+                CanvasScaler scaler = canvasObj.AddComponent<CanvasScaler>();
+                scaler.dynamicPixelsPerUnit = 1f;
+                Debug.Log($"[{username}] CanvasScaler added");
+            }
+
+            if (canvasObj.GetComponent<GraphicRaycaster>() == null)
+            {
+                canvasObj.AddComponent<GraphicRaycaster>();
+                Debug.Log($"[{username}] GraphicRaycaster added");
+            }
+
             userUI = canvasObj.GetComponent<UserUI>();
             if (userUI == null)
             {
@@ -190,36 +202,7 @@ public class PlayerController : MonoBehaviour
                 return;
             }
 
-            if (userUI.iconRow != null)
-            {
-                var rectTransform = userUI.iconRow.GetComponent<RectTransform>();
-                Debug.Log($"[{username}] IconRow RectTransform:" +
-                    $"\nSize: {rectTransform.sizeDelta}" +
-                    $"\nScale: {rectTransform.localScale}" +
-                    $"\nPosition: {rectTransform.localPosition}" +
-                    $"\nPivot: {rectTransform.pivot}");
-
-                CheckIconVisuals(userUI.iconHeal, "Heal");
-                CheckIconVisuals(userUI.iconBleed, "Bleed");
-                CheckIconVisuals(userUI.iconStun, "Stun");
-            }
-
-            if (userUI.iconRow != null)
-            {
-                userUI.iconRow.SetActive(true);
-                var hlg = userUI.iconRow.GetComponent<HorizontalLayoutGroup>();
-                if (hlg != null)
-                {
-                    Debug.Log($"[{username}] HorizontalLayoutGroup properties:" +
-                        $"\nSpacing: {hlg.spacing}" +
-                        $"\nPadding: L{hlg.padding.left} R{hlg.padding.right} T{hlg.padding.top} B{hlg.padding.bottom}" +
-                        $"\nChild Alignment: {hlg.childAlignment}");
-                }
-                else
-                {
-                    Debug.LogWarning($"[{username}] No HorizontalLayoutGroup found on IconRow!");
-                }
-            }
+            LogIconRowSetup();
         }
         else
         {
@@ -239,6 +222,32 @@ public class PlayerController : MonoBehaviour
             $"\nRectTransform - Size: {rectTransform.sizeDelta}, Scale: {rectTransform.localScale}" +
             $"\nImage - {(image != null ? $"Sprite: {(image.sprite != null ? image.sprite.name : "NULL")}, Color: {image.color}" : "No Image component")}" +
             $"\nText - {(text != null ? $"Text: {text.text}, Size: {text.fontSize}, Color: {text.color}" : "No Text component")}");
+    }
+
+    private void LogIconRowSetup()
+    {
+        if (userUI.iconRow != null)
+        {
+            var rectTransform = userUI.iconRow.GetComponent<RectTransform>();
+            Debug.Log($"[{username}] IconRow RectTransform:" +
+                $"\n  Size: {rectTransform.sizeDelta}" +
+                $"\n  Scale: {rectTransform.localScale}" +
+                $"\n  Position: {rectTransform.localPosition}" +
+                $"\n  Pivot: {rectTransform.pivot}");
+
+            var hlg = userUI.iconRow.GetComponent<HorizontalLayoutGroup>();
+            if (hlg != null)
+            {
+                Debug.Log($"[{username}] HorizontalLayoutGroup properties:" +
+                    $"\n  Spacing: {hlg.spacing}" +
+                    $"\n  Padding: L{hlg.padding.left} R{hlg.padding.right} T{hlg.padding.top} B{hlg.padding.bottom}" +
+                    $"\n  Child Alignment: {hlg.childAlignment}");
+            }
+
+            CheckIconVisuals(userUI.iconHeal, "Heal");
+            CheckIconVisuals(userUI.iconBleed, "Bleed");
+            CheckIconVisuals(userUI.iconStun, "Stun");
+        }
     }
 
     private void SetupUI()
@@ -362,10 +371,4 @@ public class PlayerController : MonoBehaviour
                 animator.ResetTrigger(param.name);
         currAnimTrig = "";
     }
-
-    /*private void ShowDamageAmount(int damage)
-    {
-        // Implement damage number display logic here
-        Debug.Log($"Damage: {damage}");
-    }*/
 }
