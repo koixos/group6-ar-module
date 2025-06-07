@@ -1,3 +1,0 @@
-C:/Workspace/group-project/PluginsAndroid/app/src/main/cpp/build/CMakeFiles/UnityWebSocketPlugin.dir
-C:/Workspace/group-project/PluginsAndroid/app/src/main/cpp/build/CMakeFiles/edit_cache.dir
-C:/Workspace/group-project/PluginsAndroid/app/src/main/cpp/build/CMakeFiles/rebuild_cache.dir
