@@ -13,20 +13,6 @@ The project aims to deliver a cross-platform AR experience using C#, AR Foundati
 
 ---
 
-## 📁 Folder Structure
-
-```text
-group6-ar-module/
-├── src/           # C++ kaynak kodları / C++ source code
-├── shaders/       # ShaderLab dosyaları / ShaderLab files
-├── unity/         # C# ve Unity entegrasyonu / C# & Unity integration
-├── docs/          # Dokümantasyon / Documentation
-├── CMakeLists.txt
-└── README.md
-```
-
----
-
 ### 📷 Demo & Screenshots
 
 ![AR Module Demo](docs/1.jpg)
